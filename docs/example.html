@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>דוגמה לשילוב טופס החזרי מס</title>
+    <style>
+        iframe {
+            width: 100%;
+            border: none;
+            transition: height 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <h1>דוגמה לשילוב טופס החזרי מס</h1>
+    
+    <iframe id="taxFormIframe" src="http://localhost:3009" style="width: 100%; height: 600px;"></iframe>
+
+    <script>
+        // האזנה להודעות מה-iframe לעדכון הגובה
+        window.addEventListener('message', function(event) {
+            if (event.data.type === 'setHeight') {
+                document.getElementById('taxFormIframe').style.height = event.data.height + 'px';
+            }
+        });
+    </script>
+</body>
+</html>
