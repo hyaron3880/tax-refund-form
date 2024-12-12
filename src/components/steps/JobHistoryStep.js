@@ -5,73 +5,138 @@ import {
   Radio,
   RadioGroup,
   Typography,
-  Button,
-  Box
+  FormLabel,
+  FormHelperText,
 } from '@mui/material';
-import { Formik, Form } from 'formik';
-import * as Yup from 'yup';
+import { makeStyles } from '@mui/styles';
+import { motion } from 'framer-motion';
+import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
+import StayCurrentPortraitIcon from '@mui/icons-material/StayCurrentPortrait';
 
-const validationSchema = Yup.object().shape({
-  jobHistory: Yup.string().required('נא לבחור היסטוריית תעסוקה')
-});
+const useStyles = makeStyles((theme) => ({
+  formControl: {
+    marginBottom: '20px',
+    '& .MuiFormLabel-root': {
+      fontSize: '16px',
+      color: '#333',
+      marginBottom: '15px',
+      display: 'block',
+    },
+  },
+  radioGroup: {
+    marginTop: '10px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px',
+  },
+  radioOption: {
+    display: 'flex',
+    alignItems: 'center',
+    padding: '12px 16px',
+    border: '1px solid #e0e0e0',
+    borderRadius: '8px',
+    transition: 'all 0.2s ease',
+    backgroundColor: '#fff',
+    '&:hover': {
+      backgroundColor: '#f5f7fa',
+      borderColor: '#1a237e',
+    },
+  },
+  radioLabel: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    width: '100%',
+    margin: 0,
+    '& .MuiFormControlLabel-label': {
+      fontSize: '15px',
+      marginRight: '12px',
+    },
+    '& .MuiRadio-root': {
+      color: '#1a237e',
+      '&.Mui-checked': {
+        color: '#1a237e',
+      },
+    },
+  },
+  icon: {
+    color: '#666',
+    marginRight: '8px',
+  },
+  selectedOption: {
+    backgroundColor: '#f5f7fa',
+    borderColor: '#1a237e',
+  },
+  error: {
+    color: '#d32f2f',
+    fontSize: '0.75rem',
+    marginTop: '8px',
+  },
+}));
 
-const JobHistoryStep = ({ onNext, data }) => {
-  const initialValues = {
-    jobHistory: data.jobHistory || ''
-  };
+const JobHistoryStep = ({ formData, handleChange, error }) => {
+  const classes = useStyles();
+
+  const options = [
+    { value: 'changed', label: 'כן, החלפתי מקום עבודה', icon: <SwapHorizIcon /> },
+    { value: 'same', label: 'לא, נשארתי באותו מקום עבודה', icon: <StayCurrentPortraitIcon /> },
+  ];
 
   return (
-    <Formik
-      initialValues={initialValues}
-      validationSchema={validationSchema}
-      onSubmit={(values) => {
-        onNext({ jobHistory: values.jobHistory });
-      }}
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
     >
-      {({ values, handleChange, errors, touched }) => (
-        <Form>
-          <Typography variant="h5" gutterBottom align="center">
-            האם במהלך 6 השנים האחרונות החלפת עבודה?
-          </Typography>
-
-          <FormControl component="fieldset" fullWidth error={touched.jobHistory && Boolean(errors.jobHistory)}>
-            <RadioGroup
-              name="jobHistory"
-              value={values.jobHistory}
-              onChange={handleChange}
+      <FormControl 
+        component="fieldset" 
+        className={classes.formControl}
+        error={Boolean(error)}
+        fullWidth
+      >
+        <FormLabel 
+          component="legend"
+          id="job-history-label"
+        >
+          האם החלפת מקום עבודה בשנים האחרונות?
+        </FormLabel>
+        
+        <RadioGroup
+          aria-labelledby="job-history-label"
+          name="jobHistory"
+          value={formData.jobHistory || ''}
+          onChange={handleChange}
+          className={classes.radioGroup}
+        >
+          {options.map((option) => (
+            <div 
+              key={option.value}
+              className={`${classes.radioOption} ${
+                formData.jobHistory === option.value ? classes.selectedOption : ''
+              }`}
             >
               <FormControlLabel
-                value="same"
+                value={option.value}
                 control={<Radio />}
-                label="עבדתי באותו מקום עבודה"
+                label={
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    {React.cloneElement(option.icon, { className: classes.icon })}
+                    {option.label}
+                  </div>
+                }
+                className={classes.radioLabel}
               />
-              <FormControlLabel
-                value="changed"
-                control={<Radio />}
-                label="החלפתי מקומות עבודה"
-              />
-            </RadioGroup>
-            
-            {touched.jobHistory && errors.jobHistory && (
-              <Typography color="error" variant="caption">
-                {errors.jobHistory}
-              </Typography>
-            )}
-          </FormControl>
-
-          <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center' }}>
-            <Button
-              variant="contained"
-              color="primary"
-              type="submit"
-              size="large"
-            >
-              המשך
-            </Button>
-          </Box>
-        </Form>
-      )}
-    </Formik>
+            </div>
+          ))}
+        </RadioGroup>
+        
+        {error && (
+          <FormHelperText className={classes.error}>
+            {error}
+          </FormHelperText>
+        )}
+      </FormControl>
+    </motion.div>
   );
 };
 

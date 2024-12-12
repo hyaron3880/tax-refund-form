@@ -1,30 +1,158 @@
 import React, { useState, useEffect } from 'react';
-import emailjs from '@emailjs/browser';
-import { 
-  Stepper, 
-  Step, 
-  StepLabel, 
-  Button, 
-  Container, 
+import {
+  Stepper,
+  Step,
+  StepLabel,
+  Button,
   Typography,
-  Box,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogContentText,
-  DialogActions
+  DialogActions,
+  IconButton,
+  Tooltip,
+  useMediaQuery,
+  CircularProgress,
+  Box
 } from '@mui/material';
+import { makeStyles } from '@mui/styles';
+import { motion, AnimatePresence } from 'framer-motion';
+import InfoIcon from '@mui/icons-material/Info';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
+import rtlPlugin from 'stylis-plugin-rtl';
+import { CacheProvider } from '@emotion/react';
+import createCache from '@emotion/cache';
+import { prefixer } from 'stylis';
+import emailjs from '@emailjs/browser';
 import MaritalStatusStep from './steps/MaritalStatusStep';
 import EmploymentStatusStep from './steps/EmploymentStatusStep';
 import IncomeStep from './steps/IncomeStep';
 import JobHistoryStep from './steps/JobHistoryStep';
 import AdditionalCriteriaStep from './steps/AdditionalCriteriaStep';
 import PersonalDetailsStep from './steps/PersonalDetailsStep';
+import IntroSlide from './IntroSlide';
 
 // Initialize EmailJS with your public key
 emailjs.init("7ggM2WNflMbliCnaP"); // Replace with your public key from EmailJS
 
+const useStyles = makeStyles((theme) => ({
+  formContainer: {
+    maxWidth: '800px',
+    margin: '20px auto',
+    padding: '30px',
+    backgroundColor: '#ffffff',
+    borderRadius: '12px',
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+    position: 'relative',
+    '@media (max-width: 600px)': {
+      margin: '10px',
+      padding: '20px',
+    },
+  },
+  titleContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '10px',
+    marginBottom: '40px',
+    marginTop: '-5px',
+  },
+  title: {
+    textAlign: 'center',
+    color: '#1a237e',
+    fontSize: '18px',
+    fontWeight: 500,
+    paddingBottom: '20px',
+    '@media (max-width: 600px)': {
+      fontSize: '16px',
+    },
+  },
+  infoIcon: {
+    color: '#1a237e',
+    cursor: 'pointer',
+    fontSize: '20px',
+    '&:hover': {
+      color: '#303f9f',
+    },
+  },
+  stepProgress: {
+    textAlign: 'center',
+    color: '#666',
+    fontSize: '14px',
+    marginTop: '-15px',
+    marginBottom: '20px',
+  },
+  stepper: {
+    backgroundColor: 'transparent',
+    padding: '20px 0',
+    '@media (max-width: 600px)': {
+      padding: '10px 0',
+    },
+  },
+  stepLabel: {
+    '& .MuiStepLabel-label': {
+      fontSize: '14px',
+      '@media (max-width: 600px)': {
+        fontSize: '12px',
+      },
+    },
+    '& .MuiStepLabel-completed': {
+      color: '#4caf50',
+    },
+  },
+  stepIcon: {
+    '&.MuiStepIcon-completed': {
+      color: '#4caf50',
+    },
+  },
+  contentContainer: {
+    minHeight: '400px',
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  buttonContainer: {
+    marginTop: 'auto',
+    display: 'flex',
+    justifyContent: 'space-between',
+    paddingTop: '20px',
+    gap: '10px',
+  },
+  button: {
+    transition: 'all 0.2s ease',
+    minWidth: '120px',
+    '@media (max-width: 600px)': {
+      minWidth: '100px',
+    },
+    '&:hover': {
+      transform: 'translateY(-1px)',
+      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+    },
+  },
+  loadingSpinner: {
+    marginLeft: '10px',
+  },
+  genderNote: {
+    textAlign: 'center',
+    color: '#666',
+    fontSize: '14px',
+    marginTop: '20px',
+    marginBottom: '20px',
+    fontStyle: 'italic',
+  },
+}));
+
 const TaxRefundForm = () => {
+  const classes = useStyles();
+  const isMobile = useMediaQuery('(max-width:600px)');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showInfoDialog, setShowInfoDialog] = useState(false);
+  const [showIntro, setShowIntro] = useState(true);
+  const [showUnemployedDialog, setShowUnemployedDialog] = useState(false);
+  const [showSelfEmployedDialog, setShowSelfEmployedDialog] = useState(false);
+  const [showLowIncomeDialog, setShowLowIncomeDialog] = useState(false);
+
   const initialFormData = {
     maritalStatus: '',
     employmentStatus: '',
@@ -36,10 +164,59 @@ const TaxRefundForm = () => {
   };
 
   const [activeStep, setActiveStep] = useState(0);
-  const [formData, setFormData] = useState(initialFormData);
+  const [formData, setFormData] = useState({
+    maritalStatus: '',
+    employmentStatus: '',
+    income: '',
+    jobHistory: '',
+    additionalCriteria: [],
+    personalDetails: {
+      firstName: '',
+      lastName: '',
+      phone: '',
+      email: '',
+      city: ''
+    }
+  });
+  const [errors, setErrors] = useState({});
   const [score, setScore] = useState(0);
   const [leadQuality, setLeadQuality] = useState('');
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+
+  const handleInputChange = (event) => {
+    const { name, value } = event.target;
+    setFormData(prevData => {
+      if (name === 'personalDetails') {
+        // Handle the entire personalDetails object update
+        return {
+          ...prevData,
+          personalDetails: {
+            ...prevData.personalDetails,
+            ...value
+          }
+        };
+      } else if (name.startsWith('personalDetails.')) {
+        // Handle individual personalDetails field updates
+        const field = name.split('.')[1];
+        return {
+          ...prevData,
+          personalDetails: {
+            ...prevData.personalDetails,
+            [field]: value
+          }
+        };
+      }
+      return {
+        ...prevData,
+        [name]: value
+      };
+    });
+    // Clear error when user makes a change
+    setErrors(prev => ({
+      ...prev,
+      [name]: ''
+    }));
+  };
 
   // Function to adjust iframe height
   useEffect(() => {
@@ -130,13 +307,98 @@ const TaxRefundForm = () => {
     return { score: newScore, quality, details: scoreDetails };
   };
 
-  const handleNext = (stepData) => {
-    const newData = { ...formData, ...stepData };
-    setFormData(newData);
-    calculateScore(newData);
+  const validateStep = () => {
+    const newErrors = {};
     
+    switch (activeStep) {
+      case 0:
+        if (!formData.maritalStatus) {
+          newErrors.maritalStatus = 'נא לבחור מצב משפחתי';
+        }
+        break;
+      // Add validation for other steps here
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const isStepValid = () => {
+    switch (activeStep) {
+      case 0:
+        return Boolean(formData.maritalStatus);
+      case 1:
+        return Boolean(formData.employmentStatus);
+      case 2:
+        return Boolean(formData.income) && Boolean(formData.severancePay);
+      case 3:
+        return Boolean(formData.jobHistory);
+      case 4:
+        return Array.isArray(formData.additionalCriteria) && formData.additionalCriteria.length > 0;
+      case 5:
+        const { firstName, lastName, phone, email } = formData.personalDetails;
+        return Boolean(firstName && lastName && phone && email);
+      default:
+        return false;
+    }
+  };
+
+  const handleNext = () => {
+    if (!isStepValid()) {
+      let errorMessage = '';
+      switch (activeStep) {
+        case 0:
+          errorMessage = 'נא לבחור מצב משפחתי';
+          break;
+        case 1:
+          errorMessage = 'נא לבחור סטטוס תעסוקה';
+          break;
+        case 2:
+          if (!formData.income) {
+            errorMessage = 'נא לבחור טווח הכנסה';
+          } else if (!formData.severancePay) {
+            errorMessage = 'נא לענות על שאלת כספי הפיצויים';
+          }
+          break;
+        case 3:
+          errorMessage = 'נא לבחור האם החלפת מקום עבודה';
+          break;
+        case 4:
+          errorMessage = 'נא לבחור לפחות קריטריון אחד';
+          break;
+        case 5:
+          errorMessage = 'נא למלא את כל פרטי הקשר';
+          break;
+      }
+      
+      setErrors(prev => ({
+        ...prev,
+        [Object.keys(formData)[activeStep]]: errorMessage
+      }));
+      return;
+    }
+
+    // Check employment status logic
+    if (activeStep === 1) {
+      if (formData.employmentStatus === 'unemployed') {
+        setShowUnemployedDialog(true);
+        return;
+      } else if (formData.employmentStatus === 'selfEmployed') {
+        setShowSelfEmployedDialog(true);
+        return;
+      }
+    }
+
+    // Check income and severance pay logic
+    if (activeStep === 2) {
+      if (formData.income === 'below7000' && formData.severancePay === 'no') {
+        setShowLowIncomeDialog(true);
+        return;
+      }
+    }
+
     if (activeStep === steps.length - 1) {
-      handleSubmit(newData);
+      handleSubmit();
     } else {
       setActiveStep((prevStep) => prevStep + 1);
     }
@@ -146,79 +408,118 @@ const TaxRefundForm = () => {
     setActiveStep((prevStep) => prevStep - 1);
   };
 
-  const formatDataForEmail = (data, scoreData) => {
-    const criteriaLabels = {
-      unemployment: 'קבלת דמי אבטלה',
-      propertyTax: 'מכירת נכס',
-      securities: 'מסחר בניירות ערך',
-      lifeInsurance: 'ביטוח חיים',
-      pensionDeposit: 'הפקדה לקופת גמל',
-      donations: 'תרומות',
-      disability: 'נכות',
-      militaryService: 'שחרור מצה"ל',
-      education: 'סיום לימודים',
-      rentalIncome: 'הכנסה משכר דירה',
-      newImmigrant: 'עלייה חדשה'
-    };
-
-    const employmentStatusLabels = {
-      employed: 'שכיר',
-      selfEmployed: 'עצמאי',
-      bothEmployedAndSelfEmployed: 'שכיר + עצמאי',
-      unemployed: 'לא עובד'
-    };
-
-    return `
-      פרטי הליד:
-      
-      פרטים אישיים:
-      שם מלא: ${data.personalDetails.fullName || 'לא צוין'}
-      טלפון: ${data.personalDetails.phone || 'לא צוין'}
-      אימייל: ${data.personalDetails.email || 'לא צוין'}
-      
-      פרטי השאלון:
-      מצב משפחתי: ${data.maritalStatus === 'married' ? 'נשוי/אה' : 'רווק/ה / גרוש/ה / אלמן/ה'}
-      סטטוס תעסוקה: ${employmentStatusLabels[data.employmentStatus] || 'לא צוין'}
-      הכנסה חודשית: ${data.income === 'above7000' ? 'מעל 7,000 ש"ח' : 'מתחת ל-7,000 ש"ח'}
-      משיכת פיצויים: ${data.severancePay === 'yes' ? 'כן' : 'לא'}
-      החלפת מקום עבודה: ${data.jobHistory === 'changed' ? 'כן' : 'לא'}
-      
-      קריטריונים נוספים:
-      ${data.additionalCriteria?.map(criteria => criteriaLabels[criteria]).join('\n')}
-      
-      ניקוד וסיווג:
-      סה"כ ניקוד: ${scoreData.score} נקודות
-      דירוג הליד: ${scoreData.quality}
-      
-      פירוט הניקוד:
-      ${scoreData.details.join('\n')}
-      
-      תאריך שליחה: ${new Date().toLocaleString('he-IL', { timeZone: 'Asia/Jerusalem' })}
-    `;
-  };
-
-  const handleSubmit = async (finalData) => {
+  const handleSubmit = async () => {
     try {
-      const scoreData = calculateScore(finalData);
-      const emailContent = formatDataForEmail(finalData, scoreData);
-
+      setIsSubmitting(true);
+      console.log('Form data before submit:', formData); // Debug log
+      const scoreResult = calculateScore(formData);
+      
+      // Create template params for email
       const templateParams = {
+        to_name: 'עומר',
+        from_name: formData.personalDetails?.firstName 
+          ? `${formData.personalDetails.firstName} ${formData.personalDetails.lastName}`
+          : ' ',
         to_email: 'omerh@yuvalim-ins.co.il',
-        subject: `ליד חדש מטופס החזרי מס - ${scoreData.quality}`,
-        message: emailContent
+        subject: `ליד חדש מטופס החזרי מס - ${scoreResult.quality}`,
+        message: `
+שם מלא: ${formData.personalDetails?.firstName || ''} ${formData.personalDetails?.lastName || ''}
+טלפון: ${formData.personalDetails?.phone || ''}
+אימייל: ${formData.personalDetails?.email || ''}
+תעודת זהות: ${formData.personalDetails?.idNumber || ''}
+תאריך לידה: ${formData.personalDetails?.birthDate || ''}
+כתובת: ${formData.personalDetails?.address || ''}
+
+מצב משפחתי: ${formData.maritalStatus === 'married' ? 'נשוי/אה' : 'רווק/ה / גרוש/ה / אלמן/ה'}
+סטטוס תעסוקה: ${formData.employmentStatus === 'employed' ? 'שכיר' : 
+                formData.employmentStatus === 'selfEmployed' ? 'עצמאי' : 
+                formData.employmentStatus === 'bothEmployedAndSelfEmployed' ? 'שכיר + עצמאי' : 'לא עובד'}
+הכנסה חודשית: ${formData.income === 'above7000' ? 'מעל 7,000 ש"ח' : 'מתחת ל-7,000 ש"ח'}
+קיבל פיצויים: ${formData.severancePay === 'yes' ? 'כן' : 'לא'}
+החליף עבודה: ${formData.jobHistory === 'changed' ? 'כן' : 'לא'}
+
+קריטריונים נוספים:
+${formData.additionalCriteria?.map(criteria => {
+  const labels = {
+    unemployment: 'קבלת דמי אבטלה',
+    propertyTax: 'מכירת נכס',
+    securities: 'מסחר בניירות ערך',
+    lifeInsurance: 'ביטוח חיים',
+    pensionDeposit: 'הפקדה לקופת גמל',
+    donations: 'תרומות',
+    disability: 'נכות',
+    militaryService: 'שחרור מצה"ל',
+    education: 'סיום לימודים',
+    rentalIncome: 'הכנסה משכר דירה',
+    newImmigrant: 'עלייה חדשה'
+  };
+  return '- ' + labels[criteria];
+}).join('\n') || 'אין'}
+
+ציון: ${scoreResult.score}
+איכות הליד: ${scoreResult.quality}
+
+פירוט הניקוד:
+${scoreResult.details.join('\n')}
+
+תאריך שליחה: ${new Date().toLocaleString('he-IL', { timeZone: 'Asia/Jerusalem' })}
+`,
+        firstName: formData.personalDetails?.firstName || '',
+        lastName: formData.personalDetails?.lastName || '',
+        phone: formData.personalDetails?.phone || '',
+        email: formData.personalDetails?.email || '',
+        idNumber: formData.personalDetails?.idNumber || '',
+        birthDate: formData.personalDetails?.birthDate || '',
+        address: formData.personalDetails?.address || '',
+        maritalStatus: formData.maritalStatus === 'married' ? 'נשוי/אה' : 'רווק/ה / גרוש/ה / אלמן/ה',
+        employmentStatus: formData.employmentStatus === 'employed' ? 'שכיר' : 
+                         formData.employmentStatus === 'selfEmployed' ? 'עצמאי' : 
+                         formData.employmentStatus === 'bothEmployedAndSelfEmployed' ? 'שכיר + עצמאי' : 'לא עובד',
+        income: formData.income === 'above7000' ? 'מעל 7,000 ש"ח' : 'מתחת ל-7,000 ש"ח',
+        severancePay: formData.severancePay === 'yes' ? 'כן' : 'לא',
+        jobHistory: formData.jobHistory === 'changed' ? 'כן' : 'לא',
+        additionalCriteria: formData.additionalCriteria?.map(criteria => {
+          const labels = {
+            unemployment: 'קבלת דמי אבטלה',
+            propertyTax: 'מכירת נכס',
+            securities: 'מסחר בניירות ערך',
+            lifeInsurance: 'ביטוח חיים',
+            pensionDeposit: 'הפקדה לקופת גמל',
+            donations: 'תרומות',
+            disability: 'נכות',
+            militaryService: 'שחרור מצה"ל',
+            education: 'סיום לימודים',
+            rentalIncome: 'הכנסה משכר דירה',
+            newImmigrant: 'עלייה חדשה'
+          };
+          return labels[criteria];
+        }).join('\n') || '',
+        score: scoreResult.score,
+        quality: scoreResult.quality,
+        scoreDetails: scoreResult.details.join('\n'),
+        submissionDate: new Date().toLocaleString('he-IL', { timeZone: 'Asia/Jerusalem' })
       };
 
-      await emailjs.send(
+      console.log('Template params:', templateParams); // Debug log
+
+      // Send email
+      const response = await emailjs.send(
         'service_mg36429',
         'template_isk33ym',
         templateParams
       );
 
-      setShowSuccessDialog(true);
-      
+      if (response.status === 200) {
+        setShowSuccessDialog(true);
+      } else {
+        console.error('Failed to send email:', response);
+        alert('אירעה שגיאה בשליחת הטופס. אנא נסה שוב מאוחר יותר.');
+      }
     } catch (error) {
       console.error('Error submitting form:', error);
-      // Add error handling logic here
+      alert('אירעה שגיאה בשליחת הטופס. אנא נסה שוב מאוחר יותר.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -235,63 +536,242 @@ const TaxRefundForm = () => {
   const getStepContent = (step) => {
     switch (step) {
       case 0:
-        return <MaritalStatusStep onNext={handleNext} data={formData} />;
+        return (
+          <MaritalStatusStep
+            formData={formData}
+            handleChange={handleInputChange}
+            error={errors.maritalStatus}
+          />
+        );
       case 1:
-        return <EmploymentStatusStep onNext={handleNext} data={formData} />;
+        return <EmploymentStatusStep formData={formData} handleChange={handleInputChange} error={errors.employmentStatus} />;
       case 2:
-        return <IncomeStep onNext={handleNext} data={formData} />;
+        return <IncomeStep formData={formData} handleChange={handleInputChange} error={errors.income} />;
       case 3:
-        return <JobHistoryStep onNext={handleNext} data={formData} />;
+        return <JobHistoryStep formData={formData} handleChange={handleInputChange} error={errors.jobHistory} />;
       case 4:
-        return <AdditionalCriteriaStep onNext={handleNext} data={formData} />;
+        return <AdditionalCriteriaStep formData={formData} handleChange={handleInputChange} error={errors.additionalCriteria} />;
       case 5:
-        return <PersonalDetailsStep onNext={handleNext} data={formData} />;
+        return <PersonalDetailsStep 
+          data={formData} 
+          onNext={handleInputChange} 
+          onSubmit={handleSubmit}
+          error={errors.personalDetails} 
+        />;
       default:
         return 'Unknown step';
     }
   };
 
+  const isLastStep = activeStep === steps.length - 1;
+
   return (
-    <Container maxWidth="md" sx={{ pb: 4 }}>
-      <Box sx={{ width: '100%', mt: 4 }}>
-        <Stepper activeStep={activeStep} alternativeLabel>
-          {steps.map((label) => (
-            <Step key={label}>
-              <StepLabel>{label}</StepLabel>
-            </Step>
-          ))}
-        </Stepper>
-        
-        <Box sx={{ mt: 4, mb: 2 }}>
-          {activeStep > 0 && (
-            <Button onClick={handleBack} sx={{ float: 'right' }}>
-              חזור
-            </Button>
-          )}
-        </Box>
+    <div className={classes.formContainer}>
+      <AnimatePresence mode="wait">
+        {showIntro ? (
+          <IntroSlide onStart={() => setShowIntro(false)} />
+        ) : (
+          <>
+            <div className={classes.progressContainer}>
+              <Stepper activeStep={activeStep} alternativeLabel className={classes.stepper}>
+                {steps.map((label, index) => (
+                  <Step key={label}>
+                    <StepLabel 
+                      className={classes.stepLabel}
+                      StepIconProps={{
+                        classes: {
+                          root: classes.stepIcon,
+                          completed: classes.completed,
+                        },
+                      }}
+                    >
+                      {label}
+                      {index < activeStep && (
+                        <CheckCircleIcon 
+                          fontSize="small" 
+                          style={{ color: '#4caf50', marginLeft: '5px' }}
+                        />
+                      )}
+                    </StepLabel>
+                  </Step>
+                ))}
+              </Stepper>
+              <Typography className={classes.stepProgress}>
+                שלב {activeStep + 1} מתוך {steps.length}
+              </Typography>
+            </div>
+            
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+              className={classes.formContent}
+            >
+              <div className={classes.titleContainer}>
+                <Typography 
+                  variant="h6" 
+                  component="h1" 
+                  align="center"
+                  sx={{ 
+                    mb: 1,
+                    fontSize: '1.1rem',
+                    fontWeight: 500
+                  }}
+                >
+                  בדיקת זכאות להחזר מס
+                  <Tooltip title="מילוי השאלון אורך כ-2 דקות">
+                    <InfoIcon 
+                      sx={{ 
+                        fontSize: '1rem',
+                        marginRight: '8px',
+                        color: 'rgba(0, 0, 0, 0.54)',
+                        verticalAlign: 'middle'
+                      }} 
+                    />
+                  </Tooltip>
+                </Typography>
+              </div>
 
-        <Typography variant="body2" align="center" sx={{ mb: 4 }}>
-          השאלון כתוב בלשון זכר אך מתייחס לכל המינים.
-        </Typography>
+              <Typography className={classes.genderNote}>
+                * השאלון נכתב בלשון זכר אך מתייחס לכל המינים
+              </Typography>
 
-        {getStepContent(activeStep)}
+              {getStepContent(activeStep)}
+              
+              <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center', gap: 2 }}>
+                {activeStep > 0 && (
+                  <Button
+                    onClick={handleBack}
+                    variant="outlined"
+                  >
+                    חזור
+                  </Button>
+                )}
+                {!isLastStep && (
+                  <Button
+                    variant="contained"
+                    onClick={handleNext}
+                    disabled={!isStepValid()}
+                  >
+                    הבא
+                  </Button>
+                )}
+              </Box>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
-        <Dialog
-          open={showSuccessDialog}
-          onClose={resetForm}
-        >
-          <DialogTitle>הטופס נשלח בהצלחה!</DialogTitle>
-          <DialogContent>
-            <DialogContentText>
-              תודה על מילוי הטופס. נציג שלנו ייצור איתך קשר בהקדם.
-            </DialogContentText>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={resetForm}>סגור</Button>
-          </DialogActions>
-        </Dialog>
-      </Box>
-    </Container>
+      <Dialog
+        open={showSuccessDialog}
+        onClose={resetForm}
+        aria-labelledby="success-dialog-title"
+      >
+        <DialogTitle id="success-dialog-title">
+          הטופס נשלח בהצלחה!
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            תודה על מילוי הטופס. נציג שלנו ייצור איתך קשר בהקדם.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={resetForm}>סגור</Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={showUnemployedDialog}
+        onClose={() => setShowUnemployedDialog(false)}
+        aria-labelledby="unemployed-dialog-title"
+        aria-describedby="unemployed-dialog-description"
+      >
+        <DialogTitle id="unemployed-dialog-title">
+          {"לא ניתן להמשיך בתהליך"}
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="unemployed-dialog-description">
+            במידה ולא עבדת כלל בין השנים 2019 - 2024 לא נוכה לך מס ולכן אין באפשרותנו לבצע החזר מס
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowUnemployedDialog(false)} color="primary" autoFocus>
+            הבנתי
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={showSelfEmployedDialog}
+        onClose={() => setShowSelfEmployedDialog(false)}
+        aria-labelledby="self-employed-dialog-title"
+      >
+        <DialogTitle id="self-employed-dialog-title">
+          {"לא ניתן להמשיך בתהליך"}
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            אם עבדת כעצמאי בלבד בין השנים 2019 - 2024 סימן שאתה מחוייב בהגשת דוחות שנתיים. אין באפשרותנו לבצע עבורך החזר מס אך מרדנו מטפל גם בהגשת דוחות שנתיים. במידה והינך מעוניין ליצור איתנו קשר יש להשאיר פרטים באתר הבית שלנו
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowSelfEmployedDialog(false)} color="primary" autoFocus>
+            הבנתי
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={showLowIncomeDialog}
+        onClose={() => setShowLowIncomeDialog(false)}
+        aria-labelledby="low-income-dialog-title"
+      >
+        <DialogTitle id="low-income-dialog-title">
+          {"שגיאה"}
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            לא ניתן להתקדם מכיוון שאין זכאות להחזר מס
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowLowIncomeDialog(false)} color="primary" autoFocus>
+            הבנתי
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={showInfoDialog}
+        onClose={() => setShowInfoDialog(false)}
+        aria-labelledby="info-dialog-title"
+      >
+        <DialogTitle id="info-dialog-title">
+          מידע על החזרי מס
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            <Typography paragraph>
+              החזר מס הוא תהליך שבו רשות המיסים מחזירה לכם כסף במקרים בהם שילמתם מס ביתר.
+            </Typography>
+            <Typography paragraph>
+              ישנם מקרים רבים בהם ניתן לקבל החזר מס, למשל:
+            </Typography>
+            <ul>
+              <li>עבודה במשמרות</li>
+              <li>תרומות למוסדות מוכרים</li>
+              <li>נקודות זיכוי בגין ילדים</li>
+              <li>הוצאות רפואיות חריגות</li>
+              <li>ועוד...</li>
+            </ul>
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowInfoDialog(false)}>סגור</Button>
+        </DialogActions>
+      </Dialog>
+    </div>
   );
 };
 

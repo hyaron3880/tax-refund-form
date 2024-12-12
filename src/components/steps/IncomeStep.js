@@ -1,151 +1,174 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   FormControl,
   FormControlLabel,
   Radio,
   RadioGroup,
   Typography,
-  Button,
-  Box,
+  FormLabel,
+  FormHelperText,
   Paper,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions
+  Box
 } from '@mui/material';
-import { Formik, Form } from 'formik';
-import * as Yup from 'yup';
+import { makeStyles } from '@mui/styles';
+import { motion } from 'framer-motion';
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import MoneyOffIcon from '@mui/icons-material/MoneyOff';
 
-const validationSchema = Yup.object().shape({
-  income: Yup.string().required('נא לבחור טווח הכנסה'),
-  severancePay: Yup.string().required('נא לענות על השאלה לגבי כספי פיצויים')
-});
+const useStyles = makeStyles((theme) => ({
+  formControl: {
+    marginBottom: '20px',
+    '& .MuiFormLabel-root': {
+      fontSize: '16px',
+      color: '#333',
+      marginBottom: '15px',
+      display: 'block',
+    },
+  },
+  radioGroup: {
+    marginTop: '10px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px',
+  },
+  radioOption: {
+    display: 'flex',
+    alignItems: 'center',
+    padding: '12px 16px',
+    border: '1px solid #e0e0e0',
+    borderRadius: '8px',
+    transition: 'all 0.2s ease',
+    backgroundColor: '#fff',
+    '&:hover': {
+      backgroundColor: '#f5f7fa',
+      borderColor: '#1a237e',
+    },
+  },
+  radioLabel: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    width: '100%',
+    margin: 0,
+    '& .MuiFormControlLabel-label': {
+      fontSize: '15px',
+      marginRight: '12px',
+    },
+    '& .MuiRadio-root': {
+      color: '#1a237e',
+      '&.Mui-checked': {
+        color: '#1a237e',
+      },
+    },
+  },
+  icon: {
+    color: '#666',
+    marginRight: '8px',
+  },
+  selectedOption: {
+    backgroundColor: '#f5f7fa',
+    borderColor: '#1a237e',
+  },
+  error: {
+    color: '#d32f2f',
+    fontSize: '0.75rem',
+    marginTop: '8px',
+  },
+}));
 
-const IncomeStep = ({ onNext, data }) => {
-  const [showDialog, setShowDialog] = useState(false);
+const IncomeStep = ({ formData, handleChange, error }) => {
+  const classes = useStyles();
 
-  const initialValues = {
-    income: data.income || '',
-    severancePay: data.severancePay || ''
-  };
+  const incomeOptions = [
+    { value: 'above7000', label: 'מעל 7,000 ש"ח', icon: <AttachMoneyIcon /> },
+    { value: 'below7000', label: 'מתחת ל-7,000 ש"ח', icon: <MoneyOffIcon /> },
+  ];
 
-  const handleSubmit = (values) => {
-    if (values.income === 'below7000' && values.severancePay === 'no') {
-      setShowDialog(true);
-    } else {
-      onNext(values);
-    }
-  };
+  const severancePayOptions = [
+    { value: 'yes', label: 'כן' },
+    { value: 'no', label: 'לא' },
+  ];
 
   return (
-    <Formik
-      initialValues={initialValues}
-      validationSchema={validationSchema}
-      onSubmit={handleSubmit}
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
     >
-      {({ values, handleChange, errors, touched }) => (
-        <Form>
-          <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-            <Typography variant="h5" gutterBottom align="center">
-              האם אתה מרוויח מעל 7,000 ש״ח בחודש?
-            </Typography>
-
-            <FormControl component="fieldset" fullWidth error={touched.income && Boolean(errors.income)}>
-              <RadioGroup
-                name="income"
-                value={values.income}
-                onChange={handleChange}
-              >
-                <FormControlLabel
-                  value="above7000"
-                  control={<Radio />}
-                  label="כן"
-                />
-                <FormControlLabel
-                  value="below7000"
-                  control={<Radio />}
-                  label="לא"
-                />
-              </RadioGroup>
-              
-              {touched.income && errors.income && (
-                <Typography color="error" variant="caption">
-                  {errors.income}
-                </Typography>
-              )}
-            </FormControl>
-          </Paper>
-
-          <Paper elevation={3} sx={{ p: 3 }}>
-            <Typography variant="h5" gutterBottom align="center">
-              האם במהלך 6 השנים האחרונות משכת כספי פיצויים / פנסיה ושילמת 35% מס?
-            </Typography>
-
-            <FormControl component="fieldset" fullWidth error={touched.severancePay && Boolean(errors.severancePay)}>
-              <RadioGroup
-                name="severancePay"
-                value={values.severancePay}
-                onChange={handleChange}
-              >
-                <FormControlLabel
-                  value="yes"
-                  control={<Radio />}
-                  label="כן"
-                />
-                <FormControlLabel
-                  value="no"
-                  control={<Radio />}
-                  label="לא"
-                />
-              </RadioGroup>
-              
-              {touched.severancePay && errors.severancePay && (
-                <Typography color="error" variant="caption">
-                  {errors.severancePay}
-                </Typography>
-              )}
-            </FormControl>
-          </Paper>
-
-          <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center' }}>
-            <Button
-              variant="contained"
-              color="primary"
-              type="submit"
-              size="large"
+      <FormControl 
+        component="fieldset" 
+        className={classes.formControl}
+        error={Boolean(error)}
+        fullWidth
+      >
+        <FormLabel 
+          component="legend"
+          id="income-label"
+        >
+          מה הייתה ההכנסה החודשית הממוצעת שלך?
+        </FormLabel>
+        
+        <RadioGroup
+          aria-labelledby="income-label"
+          name="income"
+          value={formData.income || ''}
+          onChange={handleChange}
+          className={classes.radioGroup}
+        >
+          {incomeOptions.map((option) => (
+            <div 
+              key={option.value}
+              className={`${classes.radioOption} ${
+                formData.income === option.value ? classes.selectedOption : ''
+              }`}
             >
-              המשך
-            </Button>
-          </Box>
+              <FormControlLabel
+                value={option.value}
+                control={<Radio />}
+                label={
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    {React.cloneElement(option.icon, { className: classes.icon })}
+                    {option.label}
+                  </div>
+                }
+                className={classes.radioLabel}
+              />
+            </div>
+          ))}
+        </RadioGroup>
+        
+        {error && (
+          <FormHelperText className={classes.error}>
+            {error}
+          </FormHelperText>
+        )}
+      </FormControl>
 
-          <Dialog 
-            open={showDialog} 
-            onClose={() => setShowDialog(false)}
-            maxWidth="sm"
-            fullWidth
-          >
-            <DialogTitle align="center">
-              לא ניתן להמשיך
-            </DialogTitle>
-            <DialogContent>
-              <Typography align="center">
-                מכיוון שהכנסתך נמוכה מ-7,000 ש"ח ולא משכת כספי פיצויים/פנסיה, 
-                לא נוכל לבצע עבורך החזר מס כרגע.
-              </Typography>
-            </DialogContent>
-            <DialogActions sx={{ justifyContent: 'center', pb: 2 }}>
-              <Button 
-                onClick={() => setShowDialog(false)} 
-                variant="contained" 
-                color="primary"
-              >
-                הבנתי
-              </Button>
-            </DialogActions>
-          </Dialog>
-        </Form>
-      )}
-    </Formik>
+      <Box sx={{ mt: 4 }}>
+        <Typography variant="h5" gutterBottom align="center">
+          האם במהלך 6 השנים האחרונות משכת כספי פיצויים / פנסיה ושילמת 35% מס?
+        </Typography>
+
+        <Paper elevation={3} sx={{ p: 3, mt: 3 }}>
+          <FormControl component="fieldset">
+            <RadioGroup
+              value={formData.severancePay || ''}
+              onChange={handleChange}
+              name="severancePay"
+            >
+              {severancePayOptions.map((option) => (
+                <FormControlLabel
+                  key={option.value}
+                  value={option.value}
+                  control={<Radio />}
+                  label={option.label}
+                />
+              ))}
+            </RadioGroup>
+          </FormControl>
+        </Paper>
+      </Box>
+    </motion.div>
   );
 };
 

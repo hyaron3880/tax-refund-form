@@ -4,22 +4,24 @@
   "description": "Tax refund multi-step form for WordPress",
   "main": "src/index.js",
   "private": true,
-  "homepage": "https://omer_new.github.io/tax-refund-form",
+  "homepage": "https://hyaron3880.github.io/tax-refund-form",
   "scripts": {
     "start": "PORT=3009 react-scripts start",
-    "build": "react-scripts build",
+    "build": "react-scripts build && rm -rf docs && mv build docs",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d build"
+    "deploy": "gh-pages -d docs"
   },
   "dependencies": {
     "@emailjs/browser": "^3.12.1",
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
-    "@mui/icons-material": "^5.15.0",
+    "@mui/icons-material": "^5.16.11",
     "@mui/material": "^5.15.0",
+    "@mui/styles": "^6.2.0",
     "formik": "^2.4.5",
+    "framer-motion": "^11.14.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-scripts": "5.0.1",

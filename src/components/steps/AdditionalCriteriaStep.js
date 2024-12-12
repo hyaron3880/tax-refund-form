@@ -12,7 +12,7 @@ import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
 
 const validationSchema = Yup.object().shape({
-  additionalCriteria: Yup.array().of(Yup.string())
+  additionalCriteria: Yup.array().min(1, 'נא לבחור לפחות קריטריון אחד')
 });
 
 const criteriaOptions = [
@@ -62,24 +62,37 @@ const criteriaOptions = [
   }
 ];
 
-const AdditionalCriteriaStep = ({ onNext, data }) => {
+const AdditionalCriteriaStep = ({ formData, handleChange, error }) => {
   const initialValues = {
-    additionalCriteria: data.additionalCriteria || []
+    additionalCriteria: formData.additionalCriteria || []
+  };
+
+  const handleSubmit = (values) => {
+    handleChange({
+      target: {
+        name: 'additionalCriteria',
+        value: values.additionalCriteria
+      }
+    });
   };
 
   return (
     <Formik
       initialValues={initialValues}
       validationSchema={validationSchema}
-      onSubmit={(values) => {
-        onNext({ additionalCriteria: values.additionalCriteria });
-      }}
+      onSubmit={handleSubmit}
     >
-      {({ values, setFieldValue }) => (
-        <Form>
+      {({ values, setFieldValue, handleSubmit }) => (
+        <Form onSubmit={handleSubmit}>
           <Typography variant="h5" gutterBottom align="center">
             בחרו ברשימה הבאה את כל מה שנכון לגביכם ב-6 שנים האחרונות
           </Typography>
+
+          {error && (
+            <Typography color="error" align="center" sx={{ mt: 2 }}>
+              {error}
+            </Typography>
+          )}
 
           <Paper elevation={3} sx={{ p: 3, mt: 3 }}>
             <FormGroup>
@@ -96,6 +109,7 @@ const AdditionalCriteriaStep = ({ onNext, data }) => {
                               (value) => value !== option.value
                             );
                         setFieldValue('additionalCriteria', newCriteria);
+                        handleSubmit();
                       }}
                     />
                   }
@@ -104,17 +118,6 @@ const AdditionalCriteriaStep = ({ onNext, data }) => {
               ))}
             </FormGroup>
           </Paper>
-
-          <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center' }}>
-            <Button
-              variant="contained"
-              color="primary"
-              type="submit"
-              size="large"
-            >
-              המשך
-            </Button>
-          </Box>
         </Form>
       )}
     </Formik>

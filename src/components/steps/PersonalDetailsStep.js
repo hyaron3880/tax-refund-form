@@ -58,26 +58,44 @@ const validationSchema = Yup.object().shape({
     .required('שדה חובה')
 });
 
-const PersonalDetailsStep = ({ onNext, data }) => {
+const PersonalDetailsStep = ({ onNext, onSubmit, data = {} }) => {
   const initialValues = {
-    firstName: data.personalDetails?.firstName || '',
-    lastName: data.personalDetails?.lastName || '',
-    idNumber: data.personalDetails?.idNumber || '',
-    birthDate: data.personalDetails?.birthDate || '',
-    address: data.personalDetails?.address || '',
-    phone: data.personalDetails?.phone || '',
-    email: data.personalDetails?.email || ''
+    firstName: data?.personalDetails?.firstName || '',
+    lastName: data?.personalDetails?.lastName || '',
+    idNumber: data?.personalDetails?.idNumber || '',
+    birthDate: data?.personalDetails?.birthDate || '',
+    address: data?.personalDetails?.address || '',
+    phone: data?.personalDetails?.phone || '',
+    email: data?.personalDetails?.email || ''
+  };
+
+  const handleFormSubmit = (values) => {
+    // Update all form data at once with all fields
+    onNext({
+      target: {
+        name: 'personalDetails',
+        value: {
+          firstName: values.firstName || '',
+          lastName: values.lastName || '',
+          idNumber: values.idNumber || '',
+          birthDate: values.birthDate || '',
+          address: values.address || '',
+          phone: values.phone || '',
+          email: values.email || ''
+        }
+      }
+    });
+    // Then submit the form
+    onSubmit();
   };
 
   return (
     <Formik
       initialValues={initialValues}
       validationSchema={validationSchema}
-      onSubmit={(values) => {
-        onNext({ personalDetails: values });
-      }}
+      onSubmit={handleFormSubmit}
     >
-      {({ values, handleChange, errors, touched }) => (
+      {({ values, setFieldValue, errors, touched }) => (
         <Form>
           <Typography variant="h5" gutterBottom align="center">
             מלאו שאלון עכשיו וגלו האם מגיע לכם החזרי מס
@@ -94,7 +112,15 @@ const PersonalDetailsStep = ({ onNext, data }) => {
                   name="firstName"
                   label="שם פרטי"
                   value={values.firstName}
-                  onChange={handleChange}
+                  onChange={(e) => {
+                    setFieldValue('firstName', e.target.value);
+                    onNext({
+                      target: {
+                        name: 'personalDetails.firstName',
+                        value: e.target.value
+                      }
+                    });
+                  }}
                   error={touched.firstName && Boolean(errors.firstName)}
                   helperText={touched.firstName && errors.firstName}
                 />
@@ -105,7 +131,15 @@ const PersonalDetailsStep = ({ onNext, data }) => {
                   name="lastName"
                   label="שם משפחה"
                   value={values.lastName}
-                  onChange={handleChange}
+                  onChange={(e) => {
+                    setFieldValue('lastName', e.target.value);
+                    onNext({
+                      target: {
+                        name: 'personalDetails.lastName',
+                        value: e.target.value
+                      }
+                    });
+                  }}
                   error={touched.lastName && Boolean(errors.lastName)}
                   helperText={touched.lastName && errors.lastName}
                 />
@@ -116,7 +150,15 @@ const PersonalDetailsStep = ({ onNext, data }) => {
                   name="idNumber"
                   label="תעודת זהות"
                   value={values.idNumber}
-                  onChange={handleChange}
+                  onChange={(e) => {
+                    setFieldValue('idNumber', e.target.value);
+                    onNext({
+                      target: {
+                        name: 'personalDetails.idNumber',
+                        value: e.target.value
+                      }
+                    });
+                  }}
                   error={touched.idNumber && Boolean(errors.idNumber)}
                   helperText={touched.idNumber && errors.idNumber}
                 />
@@ -128,7 +170,15 @@ const PersonalDetailsStep = ({ onNext, data }) => {
                   name="birthDate"
                   label="תאריך לידה"
                   value={values.birthDate}
-                  onChange={handleChange}
+                  onChange={(e) => {
+                    setFieldValue('birthDate', e.target.value);
+                    onNext({
+                      target: {
+                        name: 'personalDetails.birthDate',
+                        value: e.target.value
+                      }
+                    });
+                  }}
                   error={touched.birthDate && Boolean(errors.birthDate)}
                   helperText={touched.birthDate && errors.birthDate}
                   InputLabelProps={{
@@ -142,7 +192,15 @@ const PersonalDetailsStep = ({ onNext, data }) => {
                   name="address"
                   label="כתובת מלאה"
                   value={values.address}
-                  onChange={handleChange}
+                  onChange={(e) => {
+                    setFieldValue('address', e.target.value);
+                    onNext({
+                      target: {
+                        name: 'personalDetails.address',
+                        value: e.target.value
+                      }
+                    });
+                  }}
                   error={touched.address && Boolean(errors.address)}
                   helperText={touched.address && errors.address}
                 />
@@ -153,7 +211,15 @@ const PersonalDetailsStep = ({ onNext, data }) => {
                   name="phone"
                   label="טלפון נייד"
                   value={values.phone}
-                  onChange={handleChange}
+                  onChange={(e) => {
+                    setFieldValue('phone', e.target.value);
+                    onNext({
+                      target: {
+                        name: 'personalDetails.phone',
+                        value: e.target.value
+                      }
+                    });
+                  }}
                   error={touched.phone && Boolean(errors.phone)}
                   helperText={touched.phone && errors.phone}
                 />
@@ -164,7 +230,15 @@ const PersonalDetailsStep = ({ onNext, data }) => {
                   name="email"
                   label="דואר אלקטרוני"
                   value={values.email}
-                  onChange={handleChange}
+                  onChange={(e) => {
+                    setFieldValue('email', e.target.value);
+                    onNext({
+                      target: {
+                        name: 'personalDetails.email',
+                        value: e.target.value
+                      }
+                    });
+                  }}
                   error={touched.email && Boolean(errors.email)}
                   helperText={touched.email && errors.email}
                 />

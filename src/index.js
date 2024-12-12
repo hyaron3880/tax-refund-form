@@ -26,10 +26,29 @@ const theme = createTheme({
 });
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
+
+// Add global styles
+const GlobalStyles = () => {
+  return (
+    <style>
+      {`
+        body {
+          margin: 0;
+          padding: 0;
+          background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+          min-height: 100vh;
+          font-family: 'Rubik', sans-serif;
+        }
+      `}
+    </style>
+  );
+};
+
 root.render(
   <React.StrictMode>
     <CacheProvider value={cacheRtl}>
       <ThemeProvider theme={theme}>
+        <GlobalStyles />
         <TaxRefundForm />
       </ThemeProvider>
     </CacheProvider>
