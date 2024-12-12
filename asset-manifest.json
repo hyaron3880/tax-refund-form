@@ -1,0 +1,10 @@
+{
+  "files": {
+    "main.js": "/tax-refund-form/static/js/main.9ee75985.js",
+    "index.html": "/tax-refund-form/index.html",
+    "main.9ee75985.js.map": "/tax-refund-form/static/js/main.9ee75985.js.map"
+  },
+  "entrypoints": [
+    "static/js/main.9ee75985.js"
+  ]
+}
