@@ -424,12 +424,38 @@ const TaxRefundForm = () => {
       
       // Create template params for email
       const templateParams = {
-        to_name: 'עומר',
-        from_name: formData.personalDetails?.firstName 
-          ? `${formData.personalDetails.firstName} ${formData.personalDetails.lastName}`
-          : ' ',
-        to_email: 'omerh@yuvalim-ins.co.il',
-        subject: `ליד חדש מטופס החזרי מס - ${scoreResult.quality}`,
+        fullName: `${formData.personalDetails?.firstName || ''} ${formData.personalDetails?.lastName || ''}`,
+        phone: formData.personalDetails?.phone || '',
+        email: formData.personalDetails?.email || '',
+        idNumber: formData.personalDetails?.idNumber || '',
+        birthDate: formData.personalDetails?.birthDate || '',
+        address: formData.personalDetails?.address || '',
+        maritalStatus: formData.maritalStatus === 'married' ? 'נשוי/אה' : 'רווק/ה / גרוש/ה / אלמן/ה',
+        employmentStatus: formData.employmentStatus === 'employed' ? 'שכיר' : 
+                         formData.employmentStatus === 'selfEmployed' ? 'עצמאי' : 
+                         formData.employmentStatus === 'bothEmployedAndSelfEmployed' ? 'שכיר + עצמאי' : 'לא עובד',
+        income: formData.income === 'above7000' ? 'מעל 7,000 ש"ח' : 'מתחת ל-7,000 ש"ח',
+        severancePay: formData.severancePay === 'yes' ? 'כן' : 'לא',
+        jobHistory: formData.jobHistory === 'changed' ? 'כן' : 'לא',
+        additionalCriteria: formData.additionalCriteria?.map(criteria => {
+          const labels = {
+            unemployment: 'קבלת דמי אבטלה',
+            propertyTax: 'מכירת נכס',
+            securities: 'מסחר בניירות ערך',
+            lifeInsurance: 'ביטוח חיים',
+            pensionDeposit: 'הפקדה לקופת גמל',
+            donations: 'תרומות',
+            disability: 'נכות',
+            militaryService: 'שחרור מצה"ל',
+            education: 'סיום לימודים',
+            rentalIncome: 'הכנסה משכר דירה',
+            newImmigrant: 'עלייה חדשה'
+          };
+          return labels[criteria];
+        }).join('\n') || 'אין',
+        score: scoreResult.score.toString(),
+        quality: scoreResult.quality,
+        scoreDetails: scoreResult.details.join('\n'),
         message: `
 שם מלא: ${formData.personalDetails?.firstName || ''} ${formData.personalDetails?.lastName || ''}
 טלפון: ${formData.personalDetails?.phone || ''}
@@ -471,41 +497,7 @@ ${formData.additionalCriteria?.map(criteria => {
 ${scoreResult.details.join('\n')}
 
 תאריך שליחה: ${new Date().toLocaleString('he-IL', { timeZone: 'Asia/Jerusalem' })}
-`,
-        firstName: formData.personalDetails?.firstName || '',
-        lastName: formData.personalDetails?.lastName || '',
-        phone: formData.personalDetails?.phone || '',
-        email: formData.personalDetails?.email || '',
-        idNumber: formData.personalDetails?.idNumber || '',
-        birthDate: formData.personalDetails?.birthDate || '',
-        address: formData.personalDetails?.address || '',
-        maritalStatus: formData.maritalStatus === 'married' ? 'נשוי/אה' : 'רווק/ה / גרוש/ה / אלמן/ה',
-        employmentStatus: formData.employmentStatus === 'employed' ? 'שכיר' : 
-                         formData.employmentStatus === 'selfEmployed' ? 'עצמאי' : 
-                         formData.employmentStatus === 'bothEmployedAndSelfEmployed' ? 'שכיר + עצמאי' : 'לא עובד',
-        income: formData.income === 'above7000' ? 'מעל 7,000 ש"ח' : 'מתחת ל-7,000 ש"ח',
-        severancePay: formData.severancePay === 'yes' ? 'כן' : 'לא',
-        jobHistory: formData.jobHistory === 'changed' ? 'כן' : 'לא',
-        additionalCriteria: formData.additionalCriteria?.map(criteria => {
-          const labels = {
-            unemployment: 'קבלת דמי אבטלה',
-            propertyTax: 'מכירת נכס',
-            securities: 'מסחר בניירות ערך',
-            lifeInsurance: 'ביטוח חיים',
-            pensionDeposit: 'הפקדה לקופת גמל',
-            donations: 'תרומות',
-            disability: 'נכות',
-            militaryService: 'שחרור מצה"ל',
-            education: 'סיום לימודים',
-            rentalIncome: 'הכנסה משכר דירה',
-            newImmigrant: 'עלייה חדשה'
-          };
-          return labels[criteria];
-        }).join('\n') || '',
-        score: scoreResult.score,
-        quality: scoreResult.quality,
-        scoreDetails: scoreResult.details.join('\n'),
-        submissionDate: new Date().toLocaleString('he-IL', { timeZone: 'Asia/Jerusalem' })
+`
       };
 
       console.log('Template params:', templateParams); // Debug log
