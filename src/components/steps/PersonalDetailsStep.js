@@ -70,7 +70,6 @@ const PersonalDetailsStep = ({ onNext, onSubmit, data = {} }) => {
   };
 
   const handleFormSubmit = (values) => {
-    // Update all form data at once with all fields
     onNext({
       target: {
         name: 'personalDetails',
@@ -85,7 +84,6 @@ const PersonalDetailsStep = ({ onNext, onSubmit, data = {} }) => {
         }
       }
     });
-    // Then submit the form
     onSubmit();
   };
 
@@ -97,310 +95,156 @@ const PersonalDetailsStep = ({ onNext, onSubmit, data = {} }) => {
     >
       {({ values, setFieldValue, errors, touched }) => (
         <Form>
-          <Typography variant="h5" gutterBottom align="center">
+          <Typography 
+            variant="h5" 
+            gutterBottom 
+            align="center"
+            sx={{
+              fontSize: { xs: '1.2rem', sm: '1.5rem' },
+              mb: { xs: 2, sm: 3 }
+            }}
+          >
             מלאו שאלון עכשיו וגלו האם מגיע לכם החזרי מס
           </Typography>
-          <Typography variant="subtitle1" gutterBottom align="center" color="textSecondary">
-            נא למלא את פרטי הטופס בצורה נכונה
-          </Typography>
-
-          <Paper elevation={3} sx={{ p: 3, mt: 3 }}>
-            <Grid container spacing={3}>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  name="firstName"
-                  label="שם פרטי"
-                  value={values.firstName}
-                  onChange={(e) => {
-                    setFieldValue('firstName', e.target.value);
-                    onNext({
-                      target: {
-                        name: 'personalDetails.firstName',
-                        value: e.target.value
-                      }
-                    });
-                  }}
-                  error={touched.firstName && Boolean(errors.firstName)}
-                  helperText={touched.firstName && errors.firstName}
-                  sx={{
-                    formControl: {
-                      marginBottom: '20px',
-                      '& .MuiFormLabel-root': {
-                        fontSize: '18px',
-                        color: '#333',
-                        marginBottom: '15px',
-                        display: 'block',
-                      },
-                    },
-                    inputLabel: {
-                      fontSize: '17px',
-                      color: '#333',
-                      marginBottom: '8px',
-                    },
-                    textField: {
-                      '& .MuiInputBase-input': {
-                        fontSize: '17px',
-                      },
-                    },
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  name="lastName"
-                  label="שם משפחה"
-                  value={values.lastName}
-                  onChange={(e) => {
-                    setFieldValue('lastName', e.target.value);
-                    onNext({
-                      target: {
-                        name: 'personalDetails.lastName',
-                        value: e.target.value
-                      }
-                    });
-                  }}
-                  error={touched.lastName && Boolean(errors.lastName)}
-                  helperText={touched.lastName && errors.lastName}
-                  sx={{
-                    formControl: {
-                      marginBottom: '20px',
-                      '& .MuiFormLabel-root': {
-                        fontSize: '18px',
-                        color: '#333',
-                        marginBottom: '15px',
-                        display: 'block',
-                      },
-                    },
-                    inputLabel: {
-                      fontSize: '17px',
-                      color: '#333',
-                      marginBottom: '8px',
-                    },
-                    textField: {
-                      '& .MuiInputBase-input': {
-                        fontSize: '17px',
-                      },
-                    },
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  name="idNumber"
-                  label="תעודת זהות"
-                  value={values.idNumber}
-                  onChange={(e) => {
-                    setFieldValue('idNumber', e.target.value);
-                    onNext({
-                      target: {
-                        name: 'personalDetails.idNumber',
-                        value: e.target.value
-                      }
-                    });
-                  }}
-                  error={touched.idNumber && Boolean(errors.idNumber)}
-                  helperText={touched.idNumber && errors.idNumber}
-                  sx={{
-                    formControl: {
-                      marginBottom: '20px',
-                      '& .MuiFormLabel-root': {
-                        fontSize: '18px',
-                        color: '#333',
-                        marginBottom: '15px',
-                        display: 'block',
-                      },
-                    },
-                    inputLabel: {
-                      fontSize: '17px',
-                      color: '#333',
-                      marginBottom: '8px',
-                    },
-                    textField: {
-                      '& .MuiInputBase-input': {
-                        fontSize: '17px',
-                      },
-                    },
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  type="date"
-                  name="birthDate"
-                  label="תאריך לידה"
-                  value={values.birthDate}
-                  onChange={(e) => {
-                    setFieldValue('birthDate', e.target.value);
-                    onNext({
-                      target: {
-                        name: 'personalDetails.birthDate',
-                        value: e.target.value
-                      }
-                    });
-                  }}
-                  error={touched.birthDate && Boolean(errors.birthDate)}
-                  helperText={touched.birthDate && errors.birthDate}
-                  InputLabelProps={{
-                    shrink: true,
-                  }}
-                  sx={{
-                    formControl: {
-                      marginBottom: '20px',
-                      '& .MuiFormLabel-root': {
-                        fontSize: '18px',
-                        color: '#333',
-                        marginBottom: '15px',
-                        display: 'block',
-                      },
-                    },
-                    inputLabel: {
-                      fontSize: '17px',
-                      color: '#333',
-                      marginBottom: '8px',
-                    },
-                    textField: {
-                      '& .MuiInputBase-input': {
-                        fontSize: '17px',
-                      },
-                    },
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  name="address"
-                  label="כתובת מלאה"
-                  value={values.address}
-                  onChange={(e) => {
-                    setFieldValue('address', e.target.value);
-                    onNext({
-                      target: {
-                        name: 'personalDetails.address',
-                        value: e.target.value
-                      }
-                    });
-                  }}
-                  error={touched.address && Boolean(errors.address)}
-                  helperText={touched.address && errors.address}
-                  sx={{
-                    formControl: {
-                      marginBottom: '20px',
-                      '& .MuiFormLabel-root': {
-                        fontSize: '18px',
-                        color: '#333',
-                        marginBottom: '15px',
-                        display: 'block',
-                      },
-                    },
-                    inputLabel: {
-                      fontSize: '17px',
-                      color: '#333',
-                      marginBottom: '8px',
-                    },
-                    textField: {
-                      '& .MuiInputBase-input': {
-                        fontSize: '17px',
-                      },
-                    },
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  name="phone"
-                  label="טלפון נייד"
-                  value={values.phone}
-                  onChange={(e) => {
-                    setFieldValue('phone', e.target.value);
-                    onNext({
-                      target: {
-                        name: 'personalDetails.phone',
-                        value: e.target.value
-                      }
-                    });
-                  }}
-                  error={touched.phone && Boolean(errors.phone)}
-                  helperText={touched.phone && errors.phone}
-                  sx={{
-                    formControl: {
-                      marginBottom: '20px',
-                      '& .MuiFormLabel-root': {
-                        fontSize: '18px',
-                        color: '#333',
-                        marginBottom: '15px',
-                        display: 'block',
-                      },
-                    },
-                    inputLabel: {
-                      fontSize: '17px',
-                      color: '#333',
-                      marginBottom: '8px',
-                    },
-                    textField: {
-                      '& .MuiInputBase-input': {
-                        fontSize: '17px',
-                      },
-                    },
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  name="email"
-                  label="דואר אלקטרוני"
-                  value={values.email}
-                  onChange={(e) => {
-                    setFieldValue('email', e.target.value);
-                    onNext({
-                      target: {
-                        name: 'personalDetails.email',
-                        value: e.target.value
-                      }
-                    });
-                  }}
-                  error={touched.email && Boolean(errors.email)}
-                  helperText={touched.email && errors.email}
-                  sx={{
-                    formControl: {
-                      marginBottom: '20px',
-                      '& .MuiFormLabel-root': {
-                        fontSize: '18px',
-                        color: '#333',
-                        marginBottom: '15px',
-                        display: 'block',
-                      },
-                    },
-                    inputLabel: {
-                      fontSize: '17px',
-                      color: '#333',
-                      marginBottom: '8px',
-                    },
-                    textField: {
-                      '& .MuiInputBase-input': {
-                        fontSize: '17px',
-                      },
-                    },
-                  }}
-                />
-              </Grid>
+          
+          <Grid container spacing={{ xs: 2, sm: 3 }} sx={{ mb: { xs: 2, sm: 3 } }}>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                name="firstName"
+                label="שם פרטי"
+                value={values.firstName}
+                onChange={(e) => setFieldValue('firstName', e.target.value)}
+                error={touched.firstName && Boolean(errors.firstName)}
+                helperText={touched.firstName && errors.firstName}
+                sx={{
+                  '& .MuiInputBase-root': {
+                    height: { xs: '45px', sm: '56px' }
+                  }
+                }}
+              />
             </Grid>
-          </Paper>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                name="lastName"
+                label="שם משפחה"
+                value={values.lastName}
+                onChange={(e) => setFieldValue('lastName', e.target.value)}
+                error={touched.lastName && Boolean(errors.lastName)}
+                helperText={touched.lastName && errors.lastName}
+                sx={{
+                  '& .MuiInputBase-root': {
+                    height: { xs: '45px', sm: '56px' }
+                  }
+                }}
+              />
+            </Grid>
+            
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                name="idNumber"
+                label="תעודת זהות"
+                value={values.idNumber}
+                onChange={(e) => setFieldValue('idNumber', e.target.value)}
+                error={touched.idNumber && Boolean(errors.idNumber)}
+                helperText={touched.idNumber && errors.idNumber}
+                sx={{
+                  '& .MuiInputBase-root': {
+                    height: { xs: '45px', sm: '56px' }
+                  }
+                }}
+              />
+            </Grid>
+            
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                type="date"
+                name="birthDate"
+                label="תאריך לידה"
+                value={values.birthDate}
+                onChange={(e) => setFieldValue('birthDate', e.target.value)}
+                error={touched.birthDate && Boolean(errors.birthDate)}
+                helperText={touched.birthDate && errors.birthDate}
+                InputLabelProps={{ shrink: true }}
+                sx={{
+                  '& .MuiInputBase-root': {
+                    height: { xs: '45px', sm: '56px' }
+                  }
+                }}
+              />
+            </Grid>
+            
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                name="address"
+                label="כתובת"
+                value={values.address}
+                onChange={(e) => setFieldValue('address', e.target.value)}
+                error={touched.address && Boolean(errors.address)}
+                helperText={touched.address && errors.address}
+                sx={{
+                  '& .MuiInputBase-root': {
+                    height: { xs: '45px', sm: '56px' }
+                  }
+                }}
+              />
+            </Grid>
+            
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                name="phone"
+                label="טלפון נייד"
+                value={values.phone}
+                onChange={(e) => setFieldValue('phone', e.target.value)}
+                error={touched.phone && Boolean(errors.phone)}
+                helperText={touched.phone && errors.phone}
+                sx={{
+                  '& .MuiInputBase-root': {
+                    height: { xs: '45px', sm: '56px' }
+                  }
+                }}
+              />
+            </Grid>
+            
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth
+                name="email"
+                label="אימייל"
+                value={values.email}
+                onChange={(e) => setFieldValue('email', e.target.value)}
+                error={touched.email && Boolean(errors.email)}
+                helperText={touched.email && errors.email}
+                sx={{
+                  '& .MuiInputBase-root': {
+                    height: { xs: '45px', sm: '56px' }
+                  }
+                }}
+              />
+            </Grid>
+          </Grid>
 
-          <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center' }}>
+          <Box sx={{ 
+            display: 'flex', 
+            justifyContent: 'flex-end',
+            mt: { xs: 2, sm: 3 },
+            '& .MuiButton-root': {
+              width: { xs: '100%', sm: 'auto' },
+              minHeight: { xs: '44px', sm: 'auto' }
+            }
+          }}>
             <Button
+              type="submit"
               variant="contained"
               color="primary"
-              type="submit"
               size="large"
             >
-              שלח טופס
+              המשך
             </Button>
           </Box>
         </Form>

@@ -46,7 +46,9 @@ const useStyles = makeStyles((theme) => ({
     position: 'relative',
     '@media (max-width: 600px)': {
       margin: '10px',
-      padding: '20px',
+      padding: '15px',
+      borderRadius: '8px',
+      maxWidth: '100%',
     },
   },
   titleContainer: {
@@ -54,17 +56,23 @@ const useStyles = makeStyles((theme) => ({
     alignItems: 'center',
     justifyContent: 'center',
     gap: '10px',
-    marginBottom: '40px',
+    marginBottom: '30px',
     marginTop: '-5px',
+    flexWrap: 'wrap',
+    '@media (max-width: 600px)': {
+      marginBottom: '20px',
+      gap: '5px',
+    },
   },
   title: {
     textAlign: 'center',
     color: '#1a237e',
-    fontSize: '20px',
+    fontSize: '24px',
     fontWeight: 500,
     paddingBottom: '20px',
     '@media (max-width: 600px)': {
-      fontSize: '18px',
+      fontSize: '20px',
+      paddingBottom: '15px',
     },
   },
   infoIcon: {
@@ -81,19 +89,30 @@ const useStyles = makeStyles((theme) => ({
     fontSize: '16px',
     marginTop: '-15px',
     marginBottom: '20px',
+    '@media (max-width: 600px)': {
+      fontSize: '14px',
+      marginTop: '-10px',
+      marginBottom: '15px',
+    },
   },
   stepper: {
     backgroundColor: 'transparent',
     padding: '20px 0',
     '@media (max-width: 600px)': {
       padding: '10px 0',
+      '& .MuiStepConnector-root': {
+        display: 'none',
+      },
+      '& .MuiStep-root': {
+        padding: '0 4px',
+      },
     },
   },
   stepLabel: {
     '& .MuiStepLabel-label': {
       fontSize: '16px',
       '@media (max-width: 600px)': {
-        fontSize: '14px',
+        fontSize: '12px',
       },
     },
     '& .MuiStepLabel-completed': {
@@ -126,6 +145,23 @@ const useStyles = makeStyles((theme) => ({
     backgroundColor: 'rgba(255, 255, 255, 0.8)',
     zIndex: 1000,
     borderRadius: '12px',
+  },
+  buttonContainer: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    marginTop: '30px',
+    gap: '16px',
+    '@media (max-width: 600px)': {
+      flexDirection: 'column-reverse',
+      gap: '10px',
+    },
+  },
+  button: {
+    minWidth: '120px',
+    '@media (max-width: 600px)': {
+      width: '100%',
+      minHeight: '44px',
+    },
   },
 }));
 
