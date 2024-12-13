@@ -19,7 +19,6 @@ import {
 import { makeStyles } from '@mui/styles';
 import { motion, AnimatePresence } from 'framer-motion';
 import InfoIcon from '@mui/icons-material/Info';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import rtlPlugin from 'stylis-plugin-rtl';
 import { CacheProvider } from '@emotion/react';
@@ -32,10 +31,9 @@ import IncomeStep from './steps/IncomeStep';
 import JobHistoryStep from './steps/JobHistoryStep';
 import AdditionalCriteriaStep from './steps/AdditionalCriteriaStep';
 import PersonalDetailsStep from './steps/PersonalDetailsStep';
-import IntroSlide from './IntroSlide';
 
 // Initialize EmailJS with your public key
-emailjs.init("7ggM2WNflMbliCnaP"); // Replace with your public key from EmailJS
+emailjs.init("7ggM2WNflMbliCnaP");
 
 const useStyles = makeStyles((theme) => ({
   formContainer: {
@@ -62,11 +60,11 @@ const useStyles = makeStyles((theme) => ({
   title: {
     textAlign: 'center',
     color: '#1a237e',
-    fontSize: '18px',
+    fontSize: '20px',
     fontWeight: 500,
     paddingBottom: '20px',
     '@media (max-width: 600px)': {
-      fontSize: '16px',
+      fontSize: '18px',
     },
   },
   infoIcon: {
@@ -80,7 +78,7 @@ const useStyles = makeStyles((theme) => ({
   stepProgress: {
     textAlign: 'center',
     color: '#666',
-    fontSize: '14px',
+    fontSize: '16px',
     marginTop: '-15px',
     marginBottom: '20px',
   },
@@ -93,9 +91,9 @@ const useStyles = makeStyles((theme) => ({
   },
   stepLabel: {
     '& .MuiStepLabel-label': {
-      fontSize: '14px',
+      fontSize: '16px',
       '@media (max-width: 600px)': {
-        fontSize: '12px',
+        fontSize: '14px',
       },
     },
     '& .MuiStepLabel-completed': {
@@ -103,43 +101,31 @@ const useStyles = makeStyles((theme) => ({
     },
   },
   stepIcon: {
-    '&.MuiStepIcon-completed': {
-      color: '#4caf50',
-    },
+    color: '#1a237e',
   },
-  contentContainer: {
-    minHeight: '400px',
-    display: 'flex',
-    flexDirection: 'column',
-  },
-  buttonContainer: {
-    marginTop: 'auto',
-    display: 'flex',
-    justifyContent: 'space-between',
-    paddingTop: '20px',
-    gap: '10px',
-  },
-  button: {
-    transition: 'all 0.2s ease',
-    minWidth: '120px',
-    '@media (max-width: 600px)': {
-      minWidth: '100px',
-    },
-    '&:hover': {
-      transform: 'translateY(-1px)',
-      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
-    },
-  },
-  loadingSpinner: {
-    marginLeft: '10px',
+  completed: {
+    color: '#1a237e !important',
   },
   genderNote: {
     textAlign: 'center',
     color: '#666',
     fontSize: '14px',
-    marginTop: '20px',
+    marginTop: '10px',
     marginBottom: '20px',
-    fontStyle: 'italic',
+    fontStyle: 'italic'
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    zIndex: 1000,
+    borderRadius: '12px',
   },
 }));
 
@@ -148,10 +134,10 @@ const TaxRefundForm = () => {
   const isMobile = useMediaQuery('(max-width:600px)');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showInfoDialog, setShowInfoDialog] = useState(false);
-  const [showIntro, setShowIntro] = useState(true);
   const [showUnemployedDialog, setShowUnemployedDialog] = useState(false);
   const [showSelfEmployedDialog, setShowSelfEmployedDialog] = useState(false);
   const [showLowIncomeDialog, setShowLowIncomeDialog] = useState(false);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
 
   const initialFormData = {
     maritalStatus: '',
@@ -164,24 +150,10 @@ const TaxRefundForm = () => {
   };
 
   const [activeStep, setActiveStep] = useState(0);
-  const [formData, setFormData] = useState({
-    maritalStatus: '',
-    employmentStatus: '',
-    income: '',
-    jobHistory: '',
-    additionalCriteria: [],
-    personalDetails: {
-      firstName: '',
-      lastName: '',
-      phone: '',
-      email: '',
-      city: ''
-    }
-  });
+  const [formData, setFormData] = useState(initialFormData);
   const [errors, setErrors] = useState({});
   const [score, setScore] = useState(0);
   const [leadQuality, setLeadQuality] = useState('');
-  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
@@ -334,9 +306,9 @@ const TaxRefundForm = () => {
       case 3:
         return Boolean(formData.jobHistory);
       case 4:
-        return Array.isArray(formData.additionalCriteria) && formData.additionalCriteria.length > 0;
+        return true; // No validation required for additional criteria
       case 5:
-        const { firstName, lastName, phone, email } = formData.personalDetails;
+        const { firstName, lastName, phone, email } = formData.personalDetails || {};
         return Boolean(firstName && lastName && phone && email);
       default:
         return false;
@@ -409,8 +381,8 @@ const TaxRefundForm = () => {
   };
 
   const handleSubmit = async () => {
+    setIsSubmitting(true);
     try {
-      setIsSubmitting(true);
       console.log('Form data before submit:', formData); // Debug log
       const scoreResult = calculateScore(formData);
       
@@ -567,102 +539,11 @@ ${scoreResult.details.join('\n')}
 
   return (
     <div className={classes.formContainer}>
-      <AnimatePresence mode="wait">
-        {showIntro ? (
-          <IntroSlide onStart={() => setShowIntro(false)} />
-        ) : (
-          <>
-            <div className={classes.progressContainer}>
-              <Stepper activeStep={activeStep} alternativeLabel className={classes.stepper}>
-                {steps.map((label, index) => (
-                  <Step key={label}>
-                    <StepLabel 
-                      className={classes.stepLabel}
-                      StepIconProps={{
-                        classes: {
-                          root: classes.stepIcon,
-                          completed: classes.completed,
-                        },
-                      }}
-                    >
-                      {label}
-                      {index < activeStep && (
-                        <CheckCircleIcon 
-                          fontSize="small" 
-                          style={{ color: '#4caf50', marginLeft: '5px' }}
-                        />
-                      )}
-                    </StepLabel>
-                  </Step>
-                ))}
-              </Stepper>
-              <Typography className={classes.stepProgress}>
-                שלב {activeStep + 1} מתוך {steps.length}
-              </Typography>
-            </div>
-            
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-              className={classes.formContent}
-            >
-              <div className={classes.titleContainer}>
-                <Typography 
-                  variant="h6" 
-                  component="h1" 
-                  align="center"
-                  sx={{ 
-                    mb: 1,
-                    fontSize: '1.1rem',
-                    fontWeight: 500
-                  }}
-                >
-                  בדיקת זכאות להחזר מס
-                  <Tooltip title="מילוי השאלון אורך כ-2 דקות">
-                    <InfoIcon 
-                      sx={{ 
-                        fontSize: '1rem',
-                        marginRight: '8px',
-                        color: 'rgba(0, 0, 0, 0.54)',
-                        verticalAlign: 'middle'
-                      }} 
-                    />
-                  </Tooltip>
-                </Typography>
-              </div>
-
-              <Typography className={classes.genderNote}>
-                * השאלון נכתב בלשון זכר אך מתייחס לכל המינים
-              </Typography>
-
-              {getStepContent(activeStep)}
-              
-              <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center', gap: 2 }}>
-                {activeStep > 0 && (
-                  <Button
-                    onClick={handleBack}
-                    variant="outlined"
-                  >
-                    חזור
-                  </Button>
-                )}
-                {!isLastStep && (
-                  <Button
-                    variant="contained"
-                    onClick={handleNext}
-                    disabled={!isStepValid()}
-                  >
-                    הבא
-                  </Button>
-                )}
-              </Box>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-
+      {isSubmitting && (
+        <div className={classes.loadingOverlay}>
+          <CircularProgress size={60} thickness={4} sx={{ color: '#1a237e' }} />
+        </div>
+      )}
       <Dialog
         open={showSuccessDialog}
         onClose={resetForm}
@@ -771,6 +652,99 @@ ${scoreResult.details.join('\n')}
           <Button onClick={() => setShowInfoDialog(false)}>סגור</Button>
         </DialogActions>
       </Dialog>
+
+      <div className={classes.progressContainer}>
+        <Stepper activeStep={activeStep} alternativeLabel className={classes.stepper}>
+          {steps.map((label, index) => (
+            <Step key={label}>
+              <StepLabel 
+                className={classes.stepLabel}
+                StepIconProps={{
+                  classes: {
+                    root: classes.stepIcon,
+                    completed: classes.completed,
+                  },
+                }}
+              >
+                {label}
+              </StepLabel>
+            </Step>
+          ))}
+        </Stepper>
+        <Typography className={classes.stepProgress}>
+          שלב {activeStep + 1} מתוך {steps.length}
+        </Typography>
+      </div>
+      
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        transition={{ duration: 0.3 }}
+        className={classes.formContent}
+      >
+        <div className={classes.titleContainer}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+            <Typography 
+              variant="h6" 
+              component="h1" 
+              align="center"
+              sx={{ 
+                fontSize: '1.1rem',
+                fontWeight: 500,
+                marginBottom: 0,
+                paddingBottom: 0
+              }}
+            >
+              בדיקת זכאות להחזר מס
+              <Tooltip title="מילוי השאלון אורך כ-2 דקות">
+                <InfoIcon 
+                  sx={{ 
+                    fontSize: '1rem',
+                    marginRight: '8px',
+                    color: 'rgba(0, 0, 0, 0.54)',
+                    verticalAlign: 'middle'
+                  }} 
+                />
+              </Tooltip>
+            </Typography>
+
+            <Typography 
+              sx={{ 
+                textAlign: 'center',
+                color: '#666',
+                fontSize: '14px',
+                margin: 0,
+                fontStyle: 'italic'
+              }}
+            >
+              * השאלון נכתב בלשון זכר אך מתייחס לכל המינים
+            </Typography>
+          </div>
+        </div>
+
+        {getStepContent(activeStep)}
+        
+        <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center', gap: 2 }}>
+          {activeStep > 0 && (
+            <Button
+              onClick={handleBack}
+              variant="outlined"
+            >
+              חזור
+            </Button>
+          )}
+          {!isLastStep && (
+            <Button
+              variant="contained"
+              onClick={handleNext}
+              disabled={!isStepValid()}
+            >
+              הבא
+            </Button>
+          )}
+        </Box>
+      </motion.div>
     </div>
   );
 };

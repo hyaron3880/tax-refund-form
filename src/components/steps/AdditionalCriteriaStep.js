@@ -1,19 +1,71 @@
 import React from 'react';
 import {
-  FormGroup,
+  FormControl,
   FormControlLabel,
   Checkbox,
   Typography,
-  Button,
-  Box,
-  Paper
+  FormLabel,
+  FormHelperText,
 } from '@mui/material';
-import { Formik, Form } from 'formik';
-import * as Yup from 'yup';
+import { makeStyles } from '@mui/styles';
+import { motion } from 'framer-motion';
 
-const validationSchema = Yup.object().shape({
-  additionalCriteria: Yup.array().min(1, 'נא לבחור לפחות קריטריון אחד')
-});
+const useStyles = makeStyles((theme) => ({
+  formControl: {
+    marginBottom: '20px',
+    width: '100%',
+    padding: '0 16px',
+    '& .MuiFormLabel-root': {
+      fontSize: '18px',
+      color: '#333',
+      marginBottom: '15px',
+      display: 'block',
+    },
+  },
+  checkboxGroup: {
+    marginTop: '10px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px',
+    width: '100%',
+  },
+  checkboxOption: {
+    display: 'flex',
+    alignItems: 'center',
+    padding: '12px 16px',
+    border: '1px solid #e0e0e0',
+    borderRadius: '8px',
+    transition: 'all 0.2s ease',
+    backgroundColor: '#fff',
+    width: 'calc(100% - 32px)',
+    margin: '0 auto',
+    '&:hover': {
+      backgroundColor: '#f5f7fa',
+      borderColor: '#1a237e',
+    },
+  },
+  checkboxLabel: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    width: '100%',
+    margin: 0,
+    '& .MuiFormControlLabel-label': {
+      fontSize: '17px',
+      marginRight: '12px',
+    },
+    '& .MuiCheckbox-root': {
+      color: '#1a237e',
+      '&.Mui-checked': {
+        color: '#1a237e',
+      },
+    },
+  },
+  selectedOption: {
+    backgroundColor: '#f5f7fa',
+    borderColor: '#1a237e',
+  },
+}));
 
 const criteriaOptions = [
   {
@@ -63,64 +115,65 @@ const criteriaOptions = [
 ];
 
 const AdditionalCriteriaStep = ({ formData, handleChange, error }) => {
-  const initialValues = {
-    additionalCriteria: formData.additionalCriteria || []
-  };
+  const classes = useStyles();
 
-  const handleSubmit = (values) => {
+  const handleCheckboxChange = (event) => {
+    const { value, checked } = event.target;
+    const currentCriteria = formData.additionalCriteria || [];
+    
+    const updatedCriteria = checked
+      ? [...currentCriteria, value]
+      : currentCriteria.filter(item => item !== value);
+    
     handleChange({
       target: {
         name: 'additionalCriteria',
-        value: values.additionalCriteria
+        value: updatedCriteria
       }
     });
   };
 
   return (
-    <Formik
-      initialValues={initialValues}
-      validationSchema={validationSchema}
-      onSubmit={handleSubmit}
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.3 }}
     >
-      {({ values, setFieldValue, handleSubmit }) => (
-        <Form onSubmit={handleSubmit}>
-          <Typography variant="h5" gutterBottom align="center">
-            בחרו ברשימה הבאה את כל מה שנכון לגביכם ב-6 שנים האחרונות
-          </Typography>
-
-          {error && (
-            <Typography color="error" align="center" sx={{ mt: 2 }}>
-              {error}
-            </Typography>
-          )}
-
-          <Paper elevation={3} sx={{ p: 3, mt: 3 }}>
-            <FormGroup>
-              {criteriaOptions.map((option) => (
-                <FormControlLabel
-                  key={option.value}
-                  control={
-                    <Checkbox
-                      checked={values.additionalCriteria.includes(option.value)}
-                      onChange={(e) => {
-                        const newCriteria = e.target.checked
-                          ? [...values.additionalCriteria, option.value]
-                          : values.additionalCriteria.filter(
-                              (value) => value !== option.value
-                            );
-                        setFieldValue('additionalCriteria', newCriteria);
-                        handleSubmit();
-                      }}
-                    />
-                  }
-                  label={option.label}
-                />
-              ))}
-            </FormGroup>
-          </Paper>
-        </Form>
-      )}
-    </Formik>
+      <FormControl component="fieldset" className={classes.formControl}>
+        <FormLabel component="legend" focused={false}>
+          בחרו ברשימה הבאה את כל מה שנכון לגביכם ב-6 שנים האחרונות
+        </FormLabel>
+        <div className={classes.checkboxGroup}>
+          {criteriaOptions.map((option) => (
+            <motion.div
+              key={option.value}
+              className={`${classes.checkboxOption} ${
+                formData.additionalCriteria?.includes(option.value) ? classes.selectedOption : ''
+              }`}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <FormControlLabel
+                className={classes.checkboxLabel}
+                control={
+                  <Checkbox
+                    checked={formData.additionalCriteria?.includes(option.value) || false}
+                    onChange={handleCheckboxChange}
+                    value={option.value}
+                    name="additionalCriteria"
+                  />
+                }
+                label={option.label}
+              />
+            </motion.div>
+          ))}
+        </div>
+        {error && (
+          <FormHelperText error>{error}</FormHelperText>
+        )}
+      </FormControl>
+    </motion.div>
   );
 };
 

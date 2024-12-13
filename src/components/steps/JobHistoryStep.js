@@ -10,14 +10,14 @@ import {
 } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 import { motion } from 'framer-motion';
-import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
-import StayCurrentPortraitIcon from '@mui/icons-material/StayCurrentPortrait';
+import ChangeCircleIcon from '@mui/icons-material/ChangeCircle';
+import HomeWorkIcon from '@mui/icons-material/HomeWork';
 
 const useStyles = makeStyles((theme) => ({
   formControl: {
     marginBottom: '20px',
     '& .MuiFormLabel-root': {
-      fontSize: '16px',
+      fontSize: '18px',
       color: '#333',
       marginBottom: '15px',
       display: 'block',
@@ -45,12 +45,14 @@ const useStyles = makeStyles((theme) => ({
   radioLabel: {
     display: 'flex',
     alignItems: 'center',
-    gap: '10px',
     width: '100%',
     margin: 0,
+    padding: 0,
     '& .MuiFormControlLabel-label': {
-      fontSize: '15px',
-      marginRight: '12px',
+      fontSize: '17px',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '10px',
     },
     '& .MuiRadio-root': {
       color: '#1a237e',
@@ -60,8 +62,9 @@ const useStyles = makeStyles((theme) => ({
     },
   },
   icon: {
-    color: '#666',
-    marginRight: '8px',
+    color: '#1a237e',
+    marginRight: '5px',
+    marginLeft: '5px',
   },
   selectedOption: {
     backgroundColor: '#f5f7fa',
@@ -78,8 +81,8 @@ const JobHistoryStep = ({ formData, handleChange, error }) => {
   const classes = useStyles();
 
   const options = [
-    { value: 'changed', label: 'כן, החלפתי מקום עבודה', icon: <SwapHorizIcon /> },
-    { value: 'same', label: 'לא, נשארתי באותו מקום עבודה', icon: <StayCurrentPortraitIcon /> },
+    { value: 'changed', label: 'כן, החלפתי מקום עבודה', icon: <ChangeCircleIcon /> },
+    { value: 'same', label: 'לא, נשארתי באותו מקום עבודה', icon: <HomeWorkIcon /> },
   ];
 
   return (
@@ -121,7 +124,7 @@ const JobHistoryStep = ({ formData, handleChange, error }) => {
                 label={
                   <div style={{ display: 'flex', alignItems: 'center' }}>
                     {React.cloneElement(option.icon, { className: classes.icon })}
-                    {option.label}
+                    <span>{option.label}</span>
                   </div>
                 }
                 className={classes.radioLabel}

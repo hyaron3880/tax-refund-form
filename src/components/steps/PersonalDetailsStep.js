@@ -123,6 +123,27 @@ const PersonalDetailsStep = ({ onNext, onSubmit, data = {} }) => {
                   }}
                   error={touched.firstName && Boolean(errors.firstName)}
                   helperText={touched.firstName && errors.firstName}
+                  sx={{
+                    formControl: {
+                      marginBottom: '20px',
+                      '& .MuiFormLabel-root': {
+                        fontSize: '18px',
+                        color: '#333',
+                        marginBottom: '15px',
+                        display: 'block',
+                      },
+                    },
+                    inputLabel: {
+                      fontSize: '17px',
+                      color: '#333',
+                      marginBottom: '8px',
+                    },
+                    textField: {
+                      '& .MuiInputBase-input': {
+                        fontSize: '17px',
+                      },
+                    },
+                  }}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -142,6 +163,27 @@ const PersonalDetailsStep = ({ onNext, onSubmit, data = {} }) => {
                   }}
                   error={touched.lastName && Boolean(errors.lastName)}
                   helperText={touched.lastName && errors.lastName}
+                  sx={{
+                    formControl: {
+                      marginBottom: '20px',
+                      '& .MuiFormLabel-root': {
+                        fontSize: '18px',
+                        color: '#333',
+                        marginBottom: '15px',
+                        display: 'block',
+                      },
+                    },
+                    inputLabel: {
+                      fontSize: '17px',
+                      color: '#333',
+                      marginBottom: '8px',
+                    },
+                    textField: {
+                      '& .MuiInputBase-input': {
+                        fontSize: '17px',
+                      },
+                    },
+                  }}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -161,6 +203,27 @@ const PersonalDetailsStep = ({ onNext, onSubmit, data = {} }) => {
                   }}
                   error={touched.idNumber && Boolean(errors.idNumber)}
                   helperText={touched.idNumber && errors.idNumber}
+                  sx={{
+                    formControl: {
+                      marginBottom: '20px',
+                      '& .MuiFormLabel-root': {
+                        fontSize: '18px',
+                        color: '#333',
+                        marginBottom: '15px',
+                        display: 'block',
+                      },
+                    },
+                    inputLabel: {
+                      fontSize: '17px',
+                      color: '#333',
+                      marginBottom: '8px',
+                    },
+                    textField: {
+                      '& .MuiInputBase-input': {
+                        fontSize: '17px',
+                      },
+                    },
+                  }}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -184,6 +247,27 @@ const PersonalDetailsStep = ({ onNext, onSubmit, data = {} }) => {
                   InputLabelProps={{
                     shrink: true,
                   }}
+                  sx={{
+                    formControl: {
+                      marginBottom: '20px',
+                      '& .MuiFormLabel-root': {
+                        fontSize: '18px',
+                        color: '#333',
+                        marginBottom: '15px',
+                        display: 'block',
+                      },
+                    },
+                    inputLabel: {
+                      fontSize: '17px',
+                      color: '#333',
+                      marginBottom: '8px',
+                    },
+                    textField: {
+                      '& .MuiInputBase-input': {
+                        fontSize: '17px',
+                      },
+                    },
+                  }}
                 />
               </Grid>
               <Grid item xs={12}>
@@ -203,6 +287,27 @@ const PersonalDetailsStep = ({ onNext, onSubmit, data = {} }) => {
                   }}
                   error={touched.address && Boolean(errors.address)}
                   helperText={touched.address && errors.address}
+                  sx={{
+                    formControl: {
+                      marginBottom: '20px',
+                      '& .MuiFormLabel-root': {
+                        fontSize: '18px',
+                        color: '#333',
+                        marginBottom: '15px',
+                        display: 'block',
+                      },
+                    },
+                    inputLabel: {
+                      fontSize: '17px',
+                      color: '#333',
+                      marginBottom: '8px',
+                    },
+                    textField: {
+                      '& .MuiInputBase-input': {
+                        fontSize: '17px',
+                      },
+                    },
+                  }}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -222,6 +327,27 @@ const PersonalDetailsStep = ({ onNext, onSubmit, data = {} }) => {
                   }}
                   error={touched.phone && Boolean(errors.phone)}
                   helperText={touched.phone && errors.phone}
+                  sx={{
+                    formControl: {
+                      marginBottom: '20px',
+                      '& .MuiFormLabel-root': {
+                        fontSize: '18px',
+                        color: '#333',
+                        marginBottom: '15px',
+                        display: 'block',
+                      },
+                    },
+                    inputLabel: {
+                      fontSize: '17px',
+                      color: '#333',
+                      marginBottom: '8px',
+                    },
+                    textField: {
+                      '& .MuiInputBase-input': {
+                        fontSize: '17px',
+                      },
+                    },
+                  }}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -241,6 +367,27 @@ const PersonalDetailsStep = ({ onNext, onSubmit, data = {} }) => {
                   }}
                   error={touched.email && Boolean(errors.email)}
                   helperText={touched.email && errors.email}
+                  sx={{
+                    formControl: {
+                      marginBottom: '20px',
+                      '& .MuiFormLabel-root': {
+                        fontSize: '18px',
+                        color: '#333',
+                        marginBottom: '15px',
+                        display: 'block',
+                      },
+                    },
+                    inputLabel: {
+                      fontSize: '17px',
+                      color: '#333',
+                      marginBottom: '8px',
+                    },
+                    textField: {
+                      '& .MuiInputBase-input': {
+                        fontSize: '17px',
+                      },
+                    },
+                  }}
                 />
               </Grid>
             </Grid>

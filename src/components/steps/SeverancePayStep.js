@@ -15,10 +15,11 @@ const useStyles = makeStyles((theme) => ({
   formControl: {
     marginBottom: '20px',
     '& .MuiFormLabel-root': {
-      fontSize: '18px',
+      fontSize: '16px',
       color: '#333',
       marginBottom: '15px',
       display: 'block',
+      marginTop: '5px',
     },
   },
   radioGroup: {
@@ -47,7 +48,7 @@ const useStyles = makeStyles((theme) => ({
     width: '100%',
     margin: 0,
     '& .MuiFormControlLabel-label': {
-      fontSize: '17px',
+      fontSize: '15px',
       marginRight: '12px',
     },
     '& .MuiRadio-root': {
@@ -68,14 +69,12 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const MaritalStatusStep = ({ formData, handleChange, error }) => {
+const SeverancePayStep = ({ formData, handleChange, error }) => {
   const classes = useStyles();
 
   const options = [
-    { value: 'single', label: 'רווק' },
-    { value: 'married', label: 'נשוי' },
-    { value: 'divorced', label: 'גרוש' },
-    { value: 'widowed', label: 'אלמן' },
+    { value: 'yes', label: 'כן' },
+    { value: 'no', label: 'לא' },
   ];
 
   return (
@@ -84,17 +83,18 @@ const MaritalStatusStep = ({ formData, handleChange, error }) => {
       className={classes.formControl}
       error={Boolean(error)}
       fullWidth
+      sx={{ marginTop: '5px' }}
     >
       <FormLabel 
         component="legend"
-        id="marital-status-label"
+        id="severance-pay-label"
       >
-        מה המצב המשפחתי שלך?
+        האם במהלך 6 השנים האחרונות משכת כספי פיצויים / פנסיה ושילמת 35% מס?
       </FormLabel>
       <RadioGroup
-        aria-labelledby="marital-status-label"
-        name="maritalStatus"
-        value={formData.maritalStatus || ''}
+        aria-labelledby="severance-pay-label"
+        name="severancePay"
+        value={formData.severancePay || ''}
         onChange={handleChange}
         className={classes.radioGroup}
       >
@@ -102,14 +102,13 @@ const MaritalStatusStep = ({ formData, handleChange, error }) => {
           <motion.div
             key={option.value}
             className={`${classes.radioOption} ${
-              formData.maritalStatus === option.value ? classes.selectedOption : ''
+              formData.severancePay === option.value ? classes.selectedOption : ''
             }`}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
             <FormControlLabel
-              value={option.value}
-              control={<Radio />}
+              control={<Radio value={option.value} />}
               label={option.label}
               className={classes.radioLabel}
             />
@@ -123,4 +122,4 @@ const MaritalStatusStep = ({ formData, handleChange, error }) => {
   );
 };
 
-export default MaritalStatusStep;
+export default SeverancePayStep;
