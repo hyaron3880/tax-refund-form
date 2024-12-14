@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import emailjs from '@emailjs/browser';
 import {
   Stepper,
   Step,
@@ -24,16 +25,12 @@ import rtlPlugin from 'stylis-plugin-rtl';
 import { CacheProvider } from '@emotion/react';
 import createCache from '@emotion/cache';
 import { prefixer } from 'stylis';
-import emailjs from '@emailjs/browser';
 import MaritalStatusStep from './steps/MaritalStatusStep';
 import EmploymentStatusStep from './steps/EmploymentStatusStep';
 import IncomeStep from './steps/IncomeStep';
 import JobHistoryStep from './steps/JobHistoryStep';
 import AdditionalCriteriaStep from './steps/AdditionalCriteriaStep';
 import PersonalDetailsStep from './steps/PersonalDetailsStep';
-
-// Initialize EmailJS with your public key
-emailjs.init("7ggM2WNflMbliCnaP");
 
 const useStyles = makeStyles((theme) => ({
   formContainer: {
@@ -190,40 +187,32 @@ const TaxRefundForm = () => {
   const [errors, setErrors] = useState({});
   const [score, setScore] = useState(0);
   const [leadQuality, setLeadQuality] = useState('');
+  const [triggerSubmit, setTriggerSubmit] = useState(false);
 
   const handleInputChange = (event) => {
-    const { name, value } = event.target;
-    setFormData(prevData => {
-      if (name === 'personalDetails') {
-        // Handle the entire personalDetails object update
-        return {
-          ...prevData,
-          personalDetails: {
-            ...prevData.personalDetails,
-            ...value
-          }
-        };
-      } else if (name.startsWith('personalDetails.')) {
-        // Handle individual personalDetails field updates
-        const field = name.split('.')[1];
-        return {
-          ...prevData,
-          personalDetails: {
-            ...prevData.personalDetails,
-            [field]: value
-          }
-        };
-      }
-      return {
+    if (typeof event === 'function') {
+      // Handle function updates (for personal details)
+      setFormData(prevData => ({
+        ...prevData,
+        ...event(prevData)
+      }));
+    } else if (event.target && event.target.name) {
+      // Handle regular input changes
+      const { name, value } = event.target;
+      setFormData(prevData => ({
         ...prevData,
         [name]: value
-      };
-    });
-    // Clear error when user makes a change
-    setErrors(prev => ({
-      ...prev,
-      [name]: ''
-    }));
+      }));
+    } else {
+      // Handle personal details updates
+      setFormData(prevData => ({
+        ...prevData,
+        personalDetails: {
+          ...prevData.personalDetails,
+          ...event
+        }
+      }));
+    }
   };
 
   // Function to adjust iframe height
@@ -237,6 +226,10 @@ const TaxRefundForm = () => {
     window.addEventListener('resize', updateIframeHeight);
     return () => window.removeEventListener('resize', updateIframeHeight);
   }, [activeStep]);
+
+  useEffect(() => {
+    emailjs.init("7ggM2WNflMbliCnaP");
+  }, []);
 
   const calculateScore = (newData) => {
     let newScore = 0;
@@ -344,12 +337,22 @@ const TaxRefundForm = () => {
       case 4:
         return true; // No validation required for additional criteria
       case 5:
-        const { firstName, lastName, phone, email } = formData.personalDetails || {};
-        return Boolean(firstName && lastName && phone && email);
+        const { personalDetails } = formData;
+        if (!personalDetails) return false;
+        
+        return Boolean(
+          personalDetails.firstName?.trim() &&
+          personalDetails.lastName?.trim() &&
+          personalDetails.phone?.trim() &&
+          personalDetails.email?.trim() &&
+          personalDetails.idNumber?.trim() &&
+          personalDetails.birthDate &&
+          personalDetails.address?.trim()
+        );
       default:
         return false;
     }
-  };
+  };;
 
   const handleNext = () => {
     if (!isStepValid()) {
@@ -385,7 +388,7 @@ const TaxRefundForm = () => {
       }));
       return;
     }
-
+  
     // Check employment status logic
     if (activeStep === 1) {
       if (formData.employmentStatus === 'unemployed') {
@@ -396,7 +399,7 @@ const TaxRefundForm = () => {
         return;
       }
     }
-
+  
     // Check income and severance pay logic
     if (activeStep === 2) {
       if (formData.income === 'below7000' && formData.severancePay === 'no') {
@@ -404,121 +407,102 @@ const TaxRefundForm = () => {
         return;
       }
     }
-
-    if (activeStep === steps.length - 1) {
-      handleSubmit();
-    } else {
-      setActiveStep((prevStep) => prevStep + 1);
-    }
-  };
+  
+    setActiveStep((prevStep) => prevStep + 1);
+  }
 
   const handleBack = () => {
-    setActiveStep((prevStep) => prevStep - 1);
+    setActiveStep((prevActiveStep) => prevActiveStep - 1);
   };
 
   const handleSubmit = async () => {
-    setIsSubmitting(true);
+    if (isSubmitting) return;
+
     try {
-      console.log('Form data before submit:', formData); // Debug log
+      // Trigger the form submission in PersonalDetailsStep
+      setTriggerSubmit(true);
+      
+      const { personalDetails } = formData;
+      
+      const requiredFields = ['firstName', 'lastName', 'phone', 'email', 'idNumber', 'birthDate', 'address'];
+      const missingFields = requiredFields.filter(field => !personalDetails?.[field]);
+      
+      if (missingFields.length > 0) {
+        setErrors(prev => ({
+          ...prev,
+          personalDetails: 'אנא מלא את כל פרטי הקשר'
+        }));
+        return;
+      }
+
+      setIsSubmitting(true);
+      
+      // Calculate score
       const scoreResult = calculateScore(formData);
       
-      // Create template params for email
+      const message = `Content:
+  שם מלא: ${personalDetails.firstName} ${personalDetails.lastName}
+  טלפון: ${personalDetails.phone}
+  אימייל: ${personalDetails.email}
+  תעודת זהות: ${personalDetails.idNumber}
+  תאריך לידה: ${new Date(personalDetails.birthDate).toLocaleDateString('he-IL')}
+  כתובת: ${personalDetails.address}
+  
+  מצב משפחתי: ${formData.maritalStatus === 'married' ? 'נשוי/אה' : 'רווק/ה / גרוש/ה / אלמן/ה'}
+  סטטוס תעסוקה: ${formData.employmentStatus === 'employed' ? 'שכיר' : 
+                  formData.employmentStatus === 'selfEmployed' ? 'עצמאי' : 
+                  formData.employmentStatus === 'bothEmployedAndSelfEmployed' ? 'שכיר + עצמאי' : 'לא עובד'}
+  הכנסה חודשית: ${formData.income === 'above7000' ? 'מעל 7,000 ש"ח' : 'מתחת ל-7,000 ש"ח'}
+  קיבל פיצויים: ${formData.severancePay === 'yes' ? 'כן' : 'לא'}
+  החליף עבודה: ${formData.jobHistory === 'changed' ? 'כן' : 'לא'}
+  
+  קריטריונים נוספים:
+  ${formData.additionalCriteria?.map(criteria => {
+    const labels = {
+      unemployment: 'קבלת דמי אבטלה',
+      propertyTax: 'מכירת נכס',
+      securities: 'מסחר בניירות ערך',
+      lifeInsurance: 'ביטוח חיים',
+      pensionDeposit: 'הפקדה לקופת גמל',
+      donations: 'תרומות',
+      disability: 'נכות',
+      militaryService: 'שחרור מצה"ל',
+      education: 'סיום לימודים',
+      rentalIncome: 'הכנסה משכר דירה',
+      newImmigrant: 'עלייה חדשה'
+    };
+    return `- ${labels[criteria] || criteria}`;
+  }).join('\n') || 'אין'}
+  
+  ציון: ${scoreResult.score}
+  איכות הליד: ${scoreResult.quality}
+  
+  פירוט הניקוד:
+  ${scoreResult.details.join('\n')}`;
+  
       const templateParams = {
-        fullName: `${formData.personalDetails?.firstName || ''} ${formData.personalDetails?.lastName || ''}`,
-        phone: formData.personalDetails?.phone || '',
-        email: formData.personalDetails?.email || '',
-        idNumber: formData.personalDetails?.idNumber || '',
-        birthDate: formData.personalDetails?.birthDate || '',
-        address: formData.personalDetails?.address || '',
-        maritalStatus: formData.maritalStatus === 'married' ? 'נשוי/אה' : 'רווק/ה / גרוש/ה / אלמן/ה',
-        employmentStatus: formData.employmentStatus === 'employed' ? 'שכיר' : 
-                         formData.employmentStatus === 'selfEmployed' ? 'עצמאי' : 
-                         formData.employmentStatus === 'bothEmployedAndSelfEmployed' ? 'שכיר + עצמאי' : 'לא עובד',
-        income: formData.income === 'above7000' ? 'מעל 7,000 ש"ח' : 'מתחת ל-7,000 ש"ח',
-        severancePay: formData.severancePay === 'yes' ? 'כן' : 'לא',
-        jobHistory: formData.jobHistory === 'changed' ? 'כן' : 'לא',
-        additionalCriteria: formData.additionalCriteria?.map(criteria => {
-          const labels = {
-            unemployment: 'קבלת דמי אבטלה',
-            propertyTax: 'מכירת נכס',
-            securities: 'מסחר בניירות ערך',
-            lifeInsurance: 'ביטוח חיים',
-            pensionDeposit: 'הפקדה לקופת גמל',
-            donations: 'תרומות',
-            disability: 'נכות',
-            militaryService: 'שחרור מצה"ל',
-            education: 'סיום לימודים',
-            rentalIncome: 'הכנסה משכר דירה',
-            newImmigrant: 'עלייה חדשה'
-          };
-          return labels[criteria];
-        }).join('\n') || 'אין',
-        score: scoreResult.score.toString(),
-        quality: scoreResult.quality,
-        scoreDetails: scoreResult.details.join('\n'),
-        message: `
-שם מלא: ${formData.personalDetails?.firstName || ''} ${formData.personalDetails?.lastName || ''}
-טלפון: ${formData.personalDetails?.phone || ''}
-אימייל: ${formData.personalDetails?.email || ''}
-תעודת זהות: ${formData.personalDetails?.idNumber || ''}
-תאריך לידה: ${formData.personalDetails?.birthDate || ''}
-כתובת: ${formData.personalDetails?.address || ''}
-
-מצב משפחתי: ${formData.maritalStatus === 'married' ? 'נשוי/אה' : 'רווק/ה / גרוש/ה / אלמן/ה'}
-סטטוס תעסוקה: ${formData.employmentStatus === 'employed' ? 'שכיר' : 
-                formData.employmentStatus === 'selfEmployed' ? 'עצמאי' : 
-                formData.employmentStatus === 'bothEmployedAndSelfEmployed' ? 'שכיר + עצמאי' : 'לא עובד'}
-הכנסה חודשית: ${formData.income === 'above7000' ? 'מעל 7,000 ש"ח' : 'מתחת ל-7,000 ש"ח'}
-קיבל פיצויים: ${formData.severancePay === 'yes' ? 'כן' : 'לא'}
-החליף עבודה: ${formData.jobHistory === 'changed' ? 'כן' : 'לא'}
-
-קריטריונים נוספים:
-${formData.additionalCriteria?.map(criteria => {
-  const labels = {
-    unemployment: 'קבלת דמי אבטלה',
-    propertyTax: 'מכירת נכס',
-    securities: 'מסחר בניירות ערך',
-    lifeInsurance: 'ביטוח חיים',
-    pensionDeposit: 'הפקדה לקופת גמל',
-    donations: 'תרומות',
-    disability: 'נכות',
-    militaryService: 'שחרור מצה"ל',
-    education: 'סיום לימודים',
-    rentalIncome: 'הכנסה משכר דירה',
-    newImmigrant: 'עלייה חדשה'
-  };
-  return '- ' + labels[criteria];
-}).join('\n') || 'אין'}
-
-ציון: ${scoreResult.score}
-איכות הליד: ${scoreResult.quality}
-
-פירוט הניקוד:
-${scoreResult.details.join('\n')}
-
-תאריך שליחה: ${new Date().toLocaleString('he-IL', { timeZone: 'Asia/Jerusalem' })}
-`
+        subject: 'ליד חדש מטופס החזרי מס',
+        message: message
       };
-
-      console.log('Template params:', templateParams); // Debug log
-
-      // Send email
-      const response = await emailjs.send(
+  
+      // Send the email
+      await emailjs.send(
         'service_mg36429',
         'template_isk33ym',
-        templateParams
+        templateParams,
+        '7ggM2WNflMbliCnaP'
       );
-
-      if (response.status === 200) {
-        setShowSuccessDialog(true);
-      } else {
-        console.error('Failed to send email:', response);
-        alert('אירעה שגיאה בשליחת הטופס. אנא נסה שוב מאוחר יותר.');
-      }
+  
+      // Show success dialog only after email is sent
+      setShowSuccessDialog(true);
     } catch (error) {
-      console.error('Error submitting form:', error);
-      alert('אירעה שגיאה בשליחת הטופס. אנא נסה שוב מאוחר יותר.');
+      console.error('Failed to submit form:', error);
+      setErrors(prev => ({
+        ...prev,
+        formSubmission: 'אירעה שגיאה בשליחת הטופס. אנא נסה שוב מאוחר יותר.'
+      }));
     } finally {
+      // Always reset the submitting state
       setIsSubmitting(false);
     }
   };
@@ -553,8 +537,8 @@ ${scoreResult.details.join('\n')}
         return <AdditionalCriteriaStep formData={formData} handleChange={handleInputChange} error={errors.additionalCriteria} />;
       case 5:
         return <PersonalDetailsStep 
-          data={formData} 
-          onNext={handleInputChange} 
+          data={{ ...formData, triggerSubmit }}
+          setFormData={setFormData}
           onSubmit={handleSubmit}
           error={errors.personalDetails} 
         />;
@@ -758,15 +742,48 @@ ${scoreResult.details.join('\n')}
             <Button
               onClick={handleBack}
               variant="outlined"
+              disabled={isSubmitting}
             >
               חזור
             </Button>
           )}
-          {!isLastStep && (
+          {activeStep === steps.length - 1 ? (
+            <>
+              {console.log('Form Data:', formData)}
+              {console.log('Personal Details:', formData.personalDetails)}
+              {console.log('Is Step Valid:', isStepValid())}
+              {console.log('Validation Results:', {
+                hasFirstName: Boolean(formData.personalDetails?.firstName?.trim()),
+                hasLastName: Boolean(formData.personalDetails?.lastName?.trim()),
+                hasPhone: Boolean(formData.personalDetails?.phone?.trim()),
+                hasEmail: Boolean(formData.personalDetails?.email?.trim()),
+                hasIdNumber: Boolean(formData.personalDetails?.idNumber?.trim()),
+                hasBirthDate: Boolean(formData.personalDetails?.birthDate),
+                hasAddress: Boolean(formData.personalDetails?.address?.trim())
+              })}
+              <Button
+                variant="contained"
+                onClick={handleSubmit}
+                disabled={!isStepValid() || isSubmitting}
+                sx={{
+                  width: '200px',
+                  height: '50px',
+                  fontSize: '18px',
+                  '&.Mui-disabled': {
+                    background: '#1976d2',
+                    opacity: 0.7,
+                    color: 'white'
+                  }
+                }}
+              >
+                {isSubmitting ? 'שולח...' : 'שלח טופס'}
+              </Button>
+            </>
+          ) : (
             <Button
               variant="contained"
               onClick={handleNext}
-              disabled={!isStepValid()}
+              disabled={!isStepValid() || isSubmitting}
             >
               הבא
             </Button>
