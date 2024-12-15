@@ -15,7 +15,8 @@ import {
   Tooltip,
   useMediaQuery,
   CircularProgress,
-  Box
+  Box,
+  LinearProgress
 } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -95,6 +96,12 @@ const useStyles = makeStyles((theme) => ({
   stepper: {
     backgroundColor: 'transparent',
     padding: '20px 0',
+    '& .MuiStepLabel-label': {
+      fontSize: '0.9rem',
+      '@media (max-width: 600px)': {
+        fontSize: '0.8rem',
+      },
+    },
     '@media (max-width: 600px)': {
       padding: '10px 0',
       '& .MuiStepConnector-root': {
@@ -117,10 +124,16 @@ const useStyles = makeStyles((theme) => ({
     },
   },
   stepIcon: {
-    color: '#1a237e',
+    color: '#e0e0e0',
+    '&.Mui-active': {
+      color: '#1a237e',
+    },
+    '&.Mui-completed': {
+      color: '#1a237e',
+    },
   },
   completed: {
-    color: '#1a237e !important',
+    color: '#1a237e',
   },
   genderNote: {
     textAlign: 'center',
@@ -671,7 +684,7 @@ const TaxRefundForm = () => {
         </DialogActions>
       </Dialog>
 
-      <div className={classes.progressContainer}>
+      <Box sx={{ width: '100%', mb: 4 }}>
         <Stepper activeStep={activeStep} alternativeLabel className={classes.stepper}>
           {steps.map((label, index) => (
             <Step key={label}>
@@ -689,113 +702,131 @@ const TaxRefundForm = () => {
             </Step>
           ))}
         </Stepper>
-        <Typography className={classes.stepProgress}>
-          שלב {activeStep + 1} מתוך {steps.length}
-        </Typography>
-      </div>
-      
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -20 }}
-        transition={{ duration: 0.3 }}
-        className={classes.formContent}
-      >
-        <div className={classes.titleContainer}>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
-            <Typography 
-              variant="h6" 
-              component="h1" 
-              align="center"
-              sx={{ 
-                fontSize: '1.1rem',
-                fontWeight: 500,
-                marginBottom: 0,
-                paddingBottom: 0
-              }}
-            >
-              בדיקת זכאות להחזר מס
-              <Tooltip title="מילוי השאלון אורך כ-2 דקות">
-                <InfoIcon 
-                  sx={{ 
-                    fontSize: '1rem',
-                    marginRight: '8px',
-                    color: 'rgba(0, 0, 0, 0.54)',
-                    verticalAlign: 'middle'
-                  }} 
-                />
-              </Tooltip>
-            </Typography>
-
-            <Typography 
-              sx={{ 
-                textAlign: 'center',
-                color: '#666',
-                fontSize: '14px',
-                margin: 0,
-                fontStyle: 'italic'
-              }}
-            >
-              * השאלון נכתב בלשון זכר אך מתייחס לכל המינים
-            </Typography>
-          </div>
-        </div>
-
-        {getStepContent(activeStep)}
         
-        <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center', gap: 2 }}>
-          {activeStep > 0 && (
-            <Button
-              onClick={handleBack}
-              variant="outlined"
-              disabled={isSubmitting}
-            >
-              חזור
-            </Button>
-          )}
-          {activeStep === steps.length - 1 ? (
-            <>
-              {console.log('Form Data:', formData)}
-              {console.log('Personal Details:', formData.personalDetails)}
-              {console.log('Is Step Valid:', isStepValid())}
-              {console.log('Validation Results:', {
-                hasFirstName: Boolean(formData.personalDetails?.firstName?.trim()),
-                hasLastName: Boolean(formData.personalDetails?.lastName?.trim()),
-                hasPhone: Boolean(formData.personalDetails?.phone?.trim()),
-                hasEmail: Boolean(formData.personalDetails?.email?.trim()),
-                hasIdNumber: Boolean(formData.personalDetails?.idNumber?.trim()),
-                hasBirthDate: Boolean(formData.personalDetails?.birthDate),
-                hasAddress: Boolean(formData.personalDetails?.address?.trim())
-              })}
-              <Button
-                variant="contained"
-                onClick={handleSubmit}
-                disabled={!isStepValid() || isSubmitting}
-                sx={{
-                  width: '200px',
-                  height: '50px',
-                  fontSize: '18px',
-                  '&.Mui-disabled': {
-                    background: '#1976d2',
-                    opacity: 0.7,
-                    color: 'white'
-                  }
+        <Box sx={{ mt: 2 }}>
+          <Typography variant="body2" align="center" sx={{ mb: 1 }}>
+            שלב {activeStep + 1} מתוך {steps.length}
+          </Typography>
+          <LinearProgress 
+            variant="determinate" 
+            value={(activeStep / (steps.length - 1)) * 100} 
+            sx={{ 
+              height: 8, 
+              borderRadius: 4,
+              backgroundColor: '#e0e0e0',
+              '& .MuiLinearProgress-bar': {
+                backgroundColor: '#1a237e',
+                borderRadius: 4,
+              }
+            }}
+          />
+        </Box>
+      </Box>
+
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeStep}
+          initial={{ opacity: 0, x: 50 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -50 }}
+          transition={{ duration: 0.3 }}
+        >
+          <div className={classes.titleContainer}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+              <Typography 
+                variant="h6" 
+                component="h1" 
+                align="center"
+                sx={{ 
+                  fontSize: '1.1rem',
+                  fontWeight: 500,
+                  marginBottom: 0,
+                  paddingBottom: 0
                 }}
               >
-                {isSubmitting ? 'שולח...' : 'שלח טופס'}
-              </Button>
-            </>
-          ) : (
+                בדיקת זכאות להחזר מס
+                <Tooltip title="מילוי השאלון אורך כ-2 דקות">
+                  <InfoIcon 
+                    sx={{ 
+                      fontSize: '1rem',
+                      marginRight: '8px',
+                      color: 'rgba(0, 0, 0, 0.54)',
+                      verticalAlign: 'middle'
+                    }} 
+                  />
+                </Tooltip>
+              </Typography>
+
+              <Typography 
+                sx={{ 
+                  textAlign: 'center',
+                  color: '#666',
+                  fontSize: '14px',
+                  margin: 0,
+                  fontStyle: 'italic'
+                }}
+              >
+                * השאלון נכתב בלשון זכר אך מתייחס לכל המינים
+              </Typography>
+            </div>
+          </div>
+
+          {getStepContent(activeStep)}
+        </motion.div>
+      </AnimatePresence>
+      
+      <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center', gap: 2 }}>
+        {activeStep > 0 && (
+          <Button
+            onClick={handleBack}
+            variant="outlined"
+            disabled={isSubmitting}
+          >
+            חזור
+          </Button>
+        )}
+        {activeStep === steps.length - 1 ? (
+          <>
+            {console.log('Form Data:', formData)}
+            {console.log('Personal Details:', formData.personalDetails)}
+            {console.log('Is Step Valid:', isStepValid())}
+            {console.log('Validation Results:', {
+              hasFirstName: Boolean(formData.personalDetails?.firstName?.trim()),
+              hasLastName: Boolean(formData.personalDetails?.lastName?.trim()),
+              hasPhone: Boolean(formData.personalDetails?.phone?.trim()),
+              hasEmail: Boolean(formData.personalDetails?.email?.trim()),
+              hasIdNumber: Boolean(formData.personalDetails?.idNumber?.trim()),
+              hasBirthDate: Boolean(formData.personalDetails?.birthDate),
+              hasAddress: Boolean(formData.personalDetails?.address?.trim())
+            })}
             <Button
               variant="contained"
-              onClick={handleNext}
+              onClick={handleSubmit}
               disabled={!isStepValid() || isSubmitting}
+              sx={{
+                width: '200px',
+                height: '50px',
+                fontSize: '18px',
+                '&.Mui-disabled': {
+                  background: '#1976d2',
+                  opacity: 0.7,
+                  color: 'white'
+                }
+              }}
             >
-              הבא
+              {isSubmitting ? 'שולח...' : 'שלח טופס'}
             </Button>
-          )}
-        </Box>
-      </motion.div>
+          </>
+        ) : (
+          <Button
+            variant="contained"
+            onClick={handleNext}
+            disabled={!isStepValid() || isSubmitting}
+          >
+            הבא
+          </Button>
+        )}
+      </Box>
     </div>
   );
 };

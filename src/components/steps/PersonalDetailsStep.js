@@ -60,11 +60,14 @@ const validationSchema = Yup.object().shape({
 
 const PersonalDetailsStep = ({ onSubmit, data = {}, setFormData, error }) => {
   const handleFieldChange = (field, value) => {
+    const shouldTrim = ['firstName', 'lastName', 'idNumber', 'phone', 'email'].includes(field);
+    const processedValue = shouldTrim && value?.trim ? value.trim() : value;
+    
     setFormData(prevData => ({
       ...prevData,
       personalDetails: {
         ...prevData.personalDetails,
-        [field]: value?.trim ? value.trim() : value
+        [field]: processedValue
       }
     }));
   };
@@ -94,6 +97,10 @@ const PersonalDetailsStep = ({ onSubmit, data = {}, setFormData, error }) => {
             onChange={(e) => handleFieldChange('firstName', e.target.value)}
             error={Boolean(error)}
             helperText={error}
+            inputProps={{
+              'aria-label': 'שם פרטי',
+              maxLength: 50,
+            }}
             sx={{
               '& .MuiInputBase-root': {
                 height: { xs: '45px', sm: '56px' }
@@ -111,6 +118,10 @@ const PersonalDetailsStep = ({ onSubmit, data = {}, setFormData, error }) => {
             onChange={(e) => handleFieldChange('lastName', e.target.value)}
             error={Boolean(error)}
             helperText={error}
+            inputProps={{
+              'aria-label': 'שם משפחה',
+              maxLength: 50
+            }}
             sx={{
               '& .MuiInputBase-root': {
                 height: { xs: '45px', sm: '56px' }
@@ -118,63 +129,6 @@ const PersonalDetailsStep = ({ onSubmit, data = {}, setFormData, error }) => {
             }}
           />
         </Grid>
-        
-        <Grid item xs={12} sm={6}>
-          <TextField
-            fullWidth
-            required
-            name="idNumber"
-            label="תעודת זהות"
-            value={data?.personalDetails?.idNumber || ''}
-            onChange={(e) => handleFieldChange('idNumber', e.target.value)}
-            error={Boolean(error)}
-            helperText={error}
-            sx={{
-              '& .MuiInputBase-root': {
-                height: { xs: '45px', sm: '56px' }
-              }
-            }}
-          />
-        </Grid>
-        
-        <Grid item xs={12} sm={6}>
-          <TextField
-            fullWidth
-            required
-            type="date"
-            name="birthDate"
-            label="תאריך לידה"
-            value={data?.personalDetails?.birthDate || ''}
-            onChange={(e) => handleFieldChange('birthDate', e.target.value)}
-            error={Boolean(error)}
-            helperText={error}
-            InputLabelProps={{ shrink: true }}
-            sx={{
-              '& .MuiInputBase-root': {
-                height: { xs: '45px', sm: '56px' }
-              }
-            }}
-          />
-        </Grid>
-        
-        <Grid item xs={12}>
-          <TextField
-            fullWidth
-            required
-            name="address"
-            label="כתובת"
-            value={data?.personalDetails?.address || ''}
-            onChange={(e) => handleFieldChange('address', e.target.value)}
-            error={Boolean(error)}
-            helperText={error}
-            sx={{
-              '& .MuiInputBase-root': {
-                height: { xs: '45px', sm: '56px' }
-              }
-            }}
-          />
-        </Grid>
-        
         <Grid item xs={12} sm={6}>
           <TextField
             fullWidth
@@ -182,9 +136,19 @@ const PersonalDetailsStep = ({ onSubmit, data = {}, setFormData, error }) => {
             name="phone"
             label="טלפון נייד"
             value={data?.personalDetails?.phone || ''}
-            onChange={(e) => handleFieldChange('phone', e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value.replace(/[^\d]/g, '');
+              if (value.length <= 10) {
+                handleFieldChange('phone', value);
+              }
+            }}
             error={Boolean(error)}
             helperText={error}
+            inputProps={{
+              'aria-label': 'טלפון נייד',
+              pattern: '05[0-9]{8}',
+              inputMode: 'numeric'
+            }}
             sx={{
               '& .MuiInputBase-root': {
                 height: { xs: '45px', sm: '56px' }
@@ -192,17 +156,94 @@ const PersonalDetailsStep = ({ onSubmit, data = {}, setFormData, error }) => {
             }}
           />
         </Grid>
-        
         <Grid item xs={12} sm={6}>
           <TextField
             fullWidth
             required
             name="email"
-            label="אימייל"
+            type="email"
+            label="דוא״ל"
             value={data?.personalDetails?.email || ''}
             onChange={(e) => handleFieldChange('email', e.target.value)}
             error={Boolean(error)}
             helperText={error}
+            inputProps={{
+              'aria-label': 'דואר אלקטרוני'
+            }}
+            sx={{
+              '& .MuiInputBase-root': {
+                height: { xs: '45px', sm: '56px' }
+              }
+            }}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            fullWidth
+            required
+            name="idNumber"
+            label="תעודת זהות"
+            value={data?.personalDetails?.idNumber || ''}
+            onChange={(e) => {
+              const value = e.target.value.replace(/[^\d]/g, '');
+              if (value.length <= 9) {
+                handleFieldChange('idNumber', value);
+              }
+            }}
+            error={Boolean(error)}
+            helperText={error}
+            inputProps={{
+              'aria-label': 'תעודת זהות',
+              pattern: '[0-9]{9}',
+              inputMode: 'numeric'
+            }}
+            sx={{
+              '& .MuiInputBase-root': {
+                height: { xs: '45px', sm: '56px' }
+              }
+            }}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            fullWidth
+            required
+            name="birthDate"
+            label="תאריך לידה"
+            type="date"
+            value={data?.personalDetails?.birthDate || ''}
+            onChange={(e) => handleFieldChange('birthDate', e.target.value)}
+            error={Boolean(error)}
+            helperText={error}
+            InputLabelProps={{
+              shrink: true,
+            }}
+            inputProps={{
+              'aria-label': 'תאריך לידה',
+              max: new Date().toISOString().split('T')[0],
+              min: '1923-01-01'
+            }}
+            sx={{
+              '& .MuiInputBase-root': {
+                height: { xs: '45px', sm: '56px' }
+              }
+            }}
+          />
+        </Grid>
+        <Grid item xs={12}>
+          <TextField
+            fullWidth
+            required
+            name="address"
+            label="כתובת מגורים"
+            value={data?.personalDetails?.address || ''}
+            onChange={(e) => handleFieldChange('address', e.target.value)}
+            error={Boolean(error)}
+            helperText={error}
+            inputProps={{
+              'aria-label': 'כתובת מגורים',
+              maxLength: 100
+            }}
             sx={{
               '& .MuiInputBase-root': {
                 height: { xs: '45px', sm: '56px' }
