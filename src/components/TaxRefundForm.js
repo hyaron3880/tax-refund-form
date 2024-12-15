@@ -259,6 +259,12 @@ const TaxRefundForm = () => {
       scoreDetails.push('הכנסה מעל 7,000 ש"ח: 5 נקודות');
     }
     
+    // כספי פיצויים
+    if (newData.severancePay === 'yes') {
+      newScore += 2;
+      scoreDetails.push('משיכת כספי פיצויים/פנסיה: 2 נקודות');
+    }
+    
     // החלפת עבודה
     if (newData.jobHistory === 'changed') {
       newScore += 4;
@@ -391,10 +397,7 @@ const TaxRefundForm = () => {
   
     // Check employment status logic
     if (activeStep === 1) {
-      if (formData.employmentStatus === 'unemployed') {
-        setShowUnemployedDialog(true);
-        return;
-      } else if (formData.employmentStatus === 'selfEmployed') {
+      if (formData.employmentStatus === 'selfEmployed') {
         setShowSelfEmployedDialog(true);
         return;
       }
@@ -448,7 +451,10 @@ const TaxRefundForm = () => {
   תאריך לידה: ${new Date(personalDetails.birthDate).toLocaleDateString('he-IL')}
   כתובת: ${personalDetails.address}
   
-  מצב משפחתי: ${formData.maritalStatus === 'married' ? 'נשוי/אה' : 'רווק/ה / גרוש/ה / אלמן/ה'}
+  מצב משפחתי: ${formData.maritalStatus === 'married' ? 'נשוי/אה' : 
+                formData.maritalStatus === 'single' ? 'רווק/ה' :
+                formData.maritalStatus === 'divorced' ? 'גרוש/ה' :
+                formData.maritalStatus === 'widowed' ? 'אלמן/ה' : ''}
   סטטוס תעסוקה: ${formData.employmentStatus === 'employed' ? 'שכיר' : 
                   formData.employmentStatus === 'selfEmployed' ? 'עצמאי' : 
                   formData.employmentStatus === 'bothEmployedAndSelfEmployed' ? 'שכיר + עצמאי' : 'לא עובד'}
