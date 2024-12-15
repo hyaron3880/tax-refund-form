@@ -766,7 +766,7 @@ const TaxRefundForm = () => {
                   fontStyle: 'italic'
                 }}
               >
-                * השאלון נכתב בלשון זכר אך מתייחס לכל המינים
+                * השאלון נכתב בלשון זכר אך מתייחס לשני המינים
               </Typography>
             </div>
           </div>
