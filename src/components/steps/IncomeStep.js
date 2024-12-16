@@ -22,12 +22,16 @@ const useStyles = makeStyles((theme) => ({
       marginBottom: '15px',
       display: 'block',
     },
+    width: '100%',
+    padding: '0 16px',
   },
   radioGroup: {
     marginTop: '10px',
     display: 'flex',
     flexDirection: 'column',
     gap: '12px',
+    width: 'calc(100% - 32px)',
+    margin: '0 auto',
   },
   radioOption: {
     display: 'flex',
@@ -51,6 +55,7 @@ const useStyles = makeStyles((theme) => ({
     '& .MuiFormControlLabel-label': {
       fontSize: '17px',
       marginRight: '12px',
+      flex: 1,
     },
     '& .MuiRadio-root': {
       color: '#1a237e',
@@ -89,11 +94,6 @@ const IncomeStep = ({ formData, handleChange, error }) => {
     { value: 'below7000', label: 'מתחת ל-7,000 ש"ח', icon: <ArrowDownwardIcon sx={{ color: '#1a237e' }} /> },
   ];
 
-  const severancePayOptions = [
-    { value: 'yes', label: 'כן' },
-    { value: 'no', label: 'לא' },
-  ];
-
   return (
     <>
       <FormControl 
@@ -106,30 +106,29 @@ const IncomeStep = ({ formData, handleChange, error }) => {
           component="legend"
           id="income-label"
         >
-          מה הייתה ההכנסה החודשית הממוצעת שלך?
+          מה ההכנסה החודשית הממוצעת שלך?
         </FormLabel>
         <RadioGroup
-          aria-labelledby="income-label"
+          aria-label="income"
           name="income"
-          value={formData.income || ''}
+          value={formData.income}
           onChange={handleChange}
           className={classes.radioGroup}
         >
           {incomeOptions.map((option) => (
             <motion.div
               key={option.value}
+              className={`${classes.radioOption} ${formData.income === option.value ? classes.selectedOption : ''}`}
               whileHover={{ scale: 1.02 }}
-              className={`${classes.radioOption} ${
-                formData.income === option.value ? classes.selectedOption : ''
-              }`}
+              whileTap={{ scale: 0.98 }}
             >
               <FormControlLabel
                 value={option.value}
                 control={<Radio />}
                 label={
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%' }}>
                     {option.icon}
-                    <span>{option.label}</span>
+                    {option.label}
                   </div>
                 }
                 className={classes.radioLabel}
@@ -137,49 +136,8 @@ const IncomeStep = ({ formData, handleChange, error }) => {
             </motion.div>
           ))}
         </RadioGroup>
+        {error && <FormHelperText error>{error}</FormHelperText>}
       </FormControl>
-
-      <FormControl 
-        component="fieldset" 
-        className={`${classes.formControl} ${classes.questionContainer}`}
-        error={Boolean(error)}
-        fullWidth
-      >
-        <FormLabel 
-          component="legend"
-          id="severance-pay-label"
-        >
-          האם במהלך 6 השנים האחרונות משכת כספי פיצויים / פנסיה ושילמת 35% מס?
-        </FormLabel>
-        <RadioGroup
-          aria-labelledby="severance-pay-label"
-          name="severancePay"
-          value={formData.severancePay || ''}
-          onChange={handleChange}
-          className={classes.radioGroup}
-        >
-          {severancePayOptions.map((option) => (
-            <motion.div
-              key={option.value}
-              className={`${classes.radioOption} ${
-                formData.severancePay === option.value ? classes.selectedOption : ''
-              }`}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <FormControlLabel
-                value={option.value}
-                control={<Radio />}
-                label={option.label}
-                className={classes.radioLabel}
-              />
-            </motion.div>
-          ))}
-        </RadioGroup>
-      </FormControl>
-      {error && (
-        <FormHelperText error>{error}</FormHelperText>
-      )}
     </>
   );
 };

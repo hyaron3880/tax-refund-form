@@ -16,7 +16,8 @@ import {
   useMediaQuery,
   CircularProgress,
   Box,
-  LinearProgress
+  LinearProgress,
+  Link
 } from '@mui/material';
 import { makeStyles } from '@mui/styles';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -180,23 +181,20 @@ const TaxRefundForm = () => {
   const isMobile = useMediaQuery('(max-width:600px)');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showInfoDialog, setShowInfoDialog] = useState(false);
-  const [showUnemployedDialog, setShowUnemployedDialog] = useState(false);
   const [showSelfEmployedDialog, setShowSelfEmployedDialog] = useState(false);
-  const [showLowIncomeDialog, setShowLowIncomeDialog] = useState(false);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [showNoEligibilityDialog, setShowNoEligibilityDialog] = useState(false);
 
-  const initialFormData = {
+  const [formData, setFormData] = useState({
     maritalStatus: '',
     employmentStatus: '',
     income: '',
-    severancePay: '',
     jobHistory: '',
     additionalCriteria: [],
     personalDetails: {}
-  };
+  });
 
   const [activeStep, setActiveStep] = useState(0);
-  const [formData, setFormData] = useState(initialFormData);
   const [errors, setErrors] = useState({});
   const [score, setScore] = useState(0);
   const [leadQuality, setLeadQuality] = useState('');
@@ -272,12 +270,6 @@ const TaxRefundForm = () => {
       scoreDetails.push('הכנסה מעל 7,000 ש"ח: 5 נקודות');
     }
     
-    // כספי פיצויים
-    if (newData.severancePay === 'yes') {
-      newScore += 2;
-      scoreDetails.push('משיכת כספי פיצויים/פנסיה: 2 נקודות');
-    }
-    
     // החלפת עבודה
     if (newData.jobHistory === 'changed') {
       newScore += 4;
@@ -289,17 +281,14 @@ const TaxRefundForm = () => {
     
     // קריטריונים נוספים
     const additionalCriteriaPoints = {
+      pensionWithdrawal: ['משיכת כספי פנסיה', 3],
       unemployment: ['קבלת דמי אבטלה', 3],
       propertyTax: ['מכירת נכס', 3],
       securities: ['מסחר בניירות ערך', 3],
-      lifeInsurance: ['ביטוח חיים', 3],
-      pensionDeposit: ['הפקדה לקופת גמל', 3],
-      donations: ['תרומות', 3],
-      disability: ['נכות', 3],
-      militaryService: ['שחרור מצה"ל', 3],
-      education: ['סיום לימודים', 3],
       rentalIncome: ['הכנסה משכר דירה', 3],
-      newImmigrant: ['עלייה חדשה', 3]
+      over60: ['גיל 60 ומעלה', 3],
+      lifeInsurance: ['ביטוח חיים', 3],
+      pensionDeposit: ['הפקדה לקופת גמל', 3]
     };
     
     newData.additionalCriteria?.forEach(criteria => {
@@ -350,7 +339,7 @@ const TaxRefundForm = () => {
       case 1:
         return Boolean(formData.employmentStatus);
       case 2:
-        return Boolean(formData.income) && Boolean(formData.severancePay);
+        return Boolean(formData.income);
       case 3:
         return Boolean(formData.jobHistory);
       case 4:
@@ -373,7 +362,44 @@ const TaxRefundForm = () => {
     }
   };;
 
+  const checkEligibilityForLowIncome = () => {
+    console.log('Checking eligibility with:', {
+      income: formData.income,
+      jobHistory: formData.jobHistory,
+      additionalCriteria: formData.additionalCriteria
+    });
+
+    // אם החליף מקום עבודה - תמיד זכאי
+    if (formData.jobHistory === 'changed') {
+      return true;
+    }
+
+    // אם ההכנסה מתחת ל-7000 ולא החליף עבודה - צריך לבדוק קריטריונים מהרשימה
+    if (formData.income === 'below7000' && formData.jobHistory === 'same') {
+      const relevantCriteria = [
+        'pensionWithdrawal',
+        'unemployment',
+        'propertyTax',
+        'securities',
+        'rentalIncome',
+        'over60'
+      ];
+      
+      return formData.additionalCriteria?.some(criteria => 
+        relevantCriteria.includes(criteria)
+      ) || false;
+    }
+
+    // אם ההכנסה מעל 7000 ולא החליף עבודה - מספיק קריטריון אחד כלשהו
+    if (formData.income === 'above7000' && formData.jobHistory === 'same') {
+      return (formData.additionalCriteria?.length > 0) || false;
+    }
+
+    return false;
+  };
+
   const handleNext = () => {
+    // בדיקת תקינות השלב הנוכחי
     if (!isStepValid()) {
       let errorMessage = '';
       switch (activeStep) {
@@ -384,48 +410,39 @@ const TaxRefundForm = () => {
           errorMessage = 'נא לבחור סטטוס תעסוקה';
           break;
         case 2:
-          if (!formData.income) {
-            errorMessage = 'נא לבחור טווח הכנסה';
-          } else if (!formData.severancePay) {
-            errorMessage = 'נא לענות על שאלת כספי הפיצויים';
-          }
+          errorMessage = 'נא לבחור טווח הכנסה';
           break;
         case 3:
           errorMessage = 'נא לבחור האם החלפת מקום עבודה';
-          break;
-        case 4:
-          errorMessage = 'נא לבחור לפחות קריטריון אחד';
           break;
         case 5:
           errorMessage = 'נא למלא את כל פרטי הקשר';
           break;
       }
       
-      setErrors(prev => ({
-        ...prev,
-        [Object.keys(formData)[activeStep]]: errorMessage
-      }));
+      if (errorMessage) {
+        setErrors(prev => ({
+          ...prev,
+          [Object.keys(formData)[activeStep]]: errorMessage
+        }));
+        return;
+      }
+    }
+
+    // בדיקת זכאות להחזר מס אחרי שלב הקריטריונים
+    if (activeStep === 4 && !checkEligibilityForLowIncome()) {
+      setShowNoEligibilityDialog(true);
       return;
     }
-  
+
     // Check employment status logic
-    if (activeStep === 1) {
-      if (formData.employmentStatus === 'selfEmployed') {
-        setShowSelfEmployedDialog(true);
-        return;
-      }
+    if (activeStep === 1 && formData.employmentStatus === 'selfEmployed') {
+      setShowSelfEmployedDialog(true);
+      return;
     }
-  
-    // Check income and severance pay logic
-    if (activeStep === 2) {
-      if (formData.income === 'below7000' && formData.severancePay === 'no') {
-        setShowLowIncomeDialog(true);
-        return;
-      }
-    }
-  
-    setActiveStep((prevStep) => prevStep + 1);
-  }
+
+    setActiveStep((prevActiveStep) => prevActiveStep + 1);
+  };
 
   const handleBack = () => {
     setActiveStep((prevActiveStep) => prevActiveStep - 1);
@@ -456,52 +473,53 @@ const TaxRefundForm = () => {
       // Calculate score
       const scoreResult = calculateScore(formData);
       
-      const message = `Content:
-  שם מלא: ${personalDetails.firstName} ${personalDetails.lastName}
-  טלפון: ${personalDetails.phone}
-  אימייל: ${personalDetails.email}
-  תעודת זהות: ${personalDetails.idNumber}
-  תאריך לידה: ${new Date(personalDetails.birthDate).toLocaleDateString('he-IL')}
-  כתובת: ${personalDetails.address}
-  
-  מצב משפחתי: ${formData.maritalStatus === 'married' ? 'נשוי/אה' : 
-                formData.maritalStatus === 'single' ? 'רווק/ה' :
-                formData.maritalStatus === 'divorced' ? 'גרוש/ה' :
-                formData.maritalStatus === 'widowed' ? 'אלמן/ה' : ''}
-  סטטוס תעסוקה: ${formData.employmentStatus === 'employed' ? 'שכיר' : 
-                  formData.employmentStatus === 'selfEmployed' ? 'עצמאי' : 
-                  formData.employmentStatus === 'bothEmployedAndSelfEmployed' ? 'שכיר + עצמאי' : 'לא עובד'}
-  הכנסה חודשית: ${formData.income === 'above7000' ? 'מעל 7,000 ש"ח' : 'מתחת ל-7,000 ש"ח'}
-  קיבל פיצויים: ${formData.severancePay === 'yes' ? 'כן' : 'לא'}
-  החליף עבודה: ${formData.jobHistory === 'changed' ? 'כן' : 'לא'}
-  
-  קריטריונים נוספים:
-  ${formData.additionalCriteria?.map(criteria => {
-    const labels = {
-      unemployment: 'קבלת דמי אבטלה',
-      propertyTax: 'מכירת נכס',
-      securities: 'מסחר בניירות ערך',
-      lifeInsurance: 'ביטוח חיים',
-      pensionDeposit: 'הפקדה לקופת גמל',
-      donations: 'תרומות',
-      disability: 'נכות',
-      militaryService: 'שחרור מצה"ל',
-      education: 'סיום לימודים',
-      rentalIncome: 'הכנסה משכר דירה',
-      newImmigrant: 'עלייה חדשה'
-    };
-    return `- ${labels[criteria] || criteria}`;
-  }).join('\n') || 'אין'}
-  
-  ציון: ${scoreResult.score}
-  איכות הליד: ${scoreResult.quality}
-  
-  פירוט הניקוד:
-  ${scoreResult.details.join('\n')}`;
-  
+      const emailContent = `
+      שם מלא: ${formData.personalDetails?.firstName} ${formData.personalDetails?.lastName}
+      טלפון: ${formData.personalDetails?.phone}
+      אימייל: ${formData.personalDetails?.email}
+      תעודת זהות: ${formData.personalDetails?.idNumber}
+      תאריך לידה: ${formData.personalDetails?.birthDate}
+      כתובת: ${formData.personalDetails?.address}
+      אישור הוצאת מסלקה פנסיונית: ${formData.personalDetails?.pensionClearance ? 'כן' : 'לא'}
+
+      מצב משפחתי: ${formData.maritalStatus === 'married' ? 'נשוי/אה' : 'רווק/ה'}
+      סטטוס תעסוקה: ${formData.employmentStatus === 'employed' ? 'שכיר' : 
+                      formData.employmentStatus === 'selfEmployed' ? 'עצמאי' : 
+                      formData.employmentStatus === 'bothEmployedAndSelfEmployed' ? 'שכיר + עצמאי' : 'לא עובד'}
+      הכנסה חודשית: ${formData.income === 'above7000' ? 'מעל 7,000 ש"ח' : 'מתחת ל-7,000 ש"ח'}
+      החלפת עבודה: ${formData.jobHistory === 'changed' ? 'כן' : 'לא'}
+      
+      קריטריונים נוספים:
+      ${formData.additionalCriteria?.map(criteria => {
+        const criteriaLabels = {
+          unemployment: 'קבלת דמי אבטלה / כספים אחרים מביטוח לאומי',
+          propertyTax: 'מכרתי נכס ושילמתי מס שבח',
+          securities: 'סחרתי בניירות ערך סחירים',
+          lifeInsurance: 'ביטוח חיים פרטי / ביטוח משכנתא',
+          pensionDeposit: 'הפקדה באופן עצמאי לקופת גמל',
+          donations: 'תרומות למוסדות מוכרים',
+          disability: 'נכות מעל 90%',
+          militaryService: 'שחרור מצה"ל / שירות לאומי',
+          newImmigrant: 'עלייה חדשה',
+          pensionWithdrawal: 'משיכת כספי פנסיה / פיצויים ושילמתי 35% מס',
+          rentalIncome: 'אני מקבל הכנסה משכר דירה',
+          over60: 'אני בן 60 ומעלה',
+          jobChange: 'החלפתי מקום עבודה'
+        };
+        return `- ${criteriaLabels[criteria] || criteria}`;
+      }).join('\n  ')}
+      
+      ציון: ${scoreResult.score}
+      איכות הליד: ${scoreResult.quality}
+
+      פירוט הניקוד:
+      ${scoreResult.details.join('\n  ')}
+      
+      `;
+      
       const templateParams = {
         subject: 'ליד חדש מטופס החזרי מס',
-        message: message
+        message: emailContent
       };
   
       // Send the email
@@ -527,7 +545,14 @@ const TaxRefundForm = () => {
   };
 
   const resetForm = () => {
-    setFormData(initialFormData);
+    setFormData({
+      maritalStatus: '',
+      employmentStatus: '',
+      income: '',
+      jobHistory: '',
+      additionalCriteria: [],
+      personalDetails: {}
+    });
     setActiveStep(0);
     setScore(0);
     setLeadQuality('');
@@ -576,85 +601,6 @@ const TaxRefundForm = () => {
         </div>
       )}
       <Dialog
-        open={showSuccessDialog}
-        onClose={resetForm}
-        aria-labelledby="success-dialog-title"
-      >
-        <DialogTitle id="success-dialog-title">
-          הטופס נשלח בהצלחה!
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            תודה על מילוי הטופס. נציג שלנו ייצור איתך קשר בהקדם.
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={resetForm}>סגור</Button>
-        </DialogActions>
-      </Dialog>
-
-      <Dialog
-        open={showUnemployedDialog}
-        onClose={() => setShowUnemployedDialog(false)}
-        aria-labelledby="unemployed-dialog-title"
-        aria-describedby="unemployed-dialog-description"
-      >
-        <DialogTitle id="unemployed-dialog-title">
-          {"לא ניתן להמשיך בתהליך"}
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText id="unemployed-dialog-description">
-            במידה ולא עבדת כלל בין השנים 2019 - 2024 לא נוכה לך מס ולכן אין באפשרותנו לבצע החזר מס
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setShowUnemployedDialog(false)} color="primary" autoFocus>
-            הבנתי
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <Dialog
-        open={showSelfEmployedDialog}
-        onClose={() => setShowSelfEmployedDialog(false)}
-        aria-labelledby="self-employed-dialog-title"
-      >
-        <DialogTitle id="self-employed-dialog-title">
-          {"לא ניתן להמשיך בתהליך"}
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            אם עבדת כעצמאי בלבד בין השנים 2019 - 2024 סימן שאתה מחוייב בהגשת דוחות שנתיים. אין באפשרותנו לבצע עבורך החזר מס אך מרדנו מטפל גם בהגשת דוחות שנתיים. במידה והינך מעוניין ליצור איתנו קשר יש להשאיר פרטים באתר הבית שלנו
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setShowSelfEmployedDialog(false)} color="primary" autoFocus>
-            הבנתי
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <Dialog
-        open={showLowIncomeDialog}
-        onClose={() => setShowLowIncomeDialog(false)}
-        aria-labelledby="low-income-dialog-title"
-      >
-        <DialogTitle id="low-income-dialog-title">
-          {"שגיאה"}
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            לא ניתן להתקדם מכיוון שאין זכאות להחזר מס
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setShowLowIncomeDialog(false)} color="primary" autoFocus>
-            הבנתי
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <Dialog
         open={showInfoDialog}
         onClose={() => setShowInfoDialog(false)}
         aria-labelledby="info-dialog-title"
@@ -681,6 +627,78 @@ const TaxRefundForm = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setShowInfoDialog(false)}>סגור</Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={showSelfEmployedDialog}
+        onClose={() => setShowSelfEmployedDialog(false)}
+        aria-labelledby="self-employed-dialog-title"
+        aria-describedby="self-employed-dialog-description"
+      >
+        <DialogTitle id="self-employed-dialog-title">
+          {"לא ניתן להמשיך בתהליך"}
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="self-employed-dialog-description">
+            אם עבדת כעצמאי בלבד בין השנים 2019 - 2024 סימן שאתה מחוייב בהגשת דוחות שנתיים. אין באפשרותנו לבצע עבורך החזר מס אך משרדנו מטפל גם בהגשת דוחות שנתיים. במידה והינך מעוניין ליצור איתנו קשר יש להשאיר פרטיך.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowSelfEmployedDialog(false)} color="primary" autoFocus>
+            הבנתי
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={showSuccessDialog}
+        onClose={resetForm}
+        aria-labelledby="success-dialog-title"
+      >
+        <DialogTitle id="success-dialog-title">
+          הטופס נשלח בהצלחה!
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            תודה על מילוי הטופס. נציג שלנו ייצור איתך קשר בהקדם.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={resetForm}>סגור</Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={showNoEligibilityDialog}
+        onClose={() => setShowNoEligibilityDialog(false)}
+        aria-labelledby="no-eligibility-dialog-title"
+        aria-describedby="no-eligibility-dialog-description"
+      >
+        <DialogTitle id="no-eligibility-dialog-title">
+          {"אין זכאות להחזר מס"}
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="no-eligibility-dialog-description">
+            על פי הנתונים שהזנת, נראה שאין לך זכאות להחזר מס. אם ברצונך להתייעץ עם צוות המומחים שלנו, אנא השאר את פרטיך.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button 
+            onClick={() => {
+              setShowNoEligibilityDialog(false);
+              setActiveStep(prevStep => prevStep + 1);
+            }}
+            color="primary"
+          >
+            המשך למילוי פרטים
+          </Button>
+          <Button 
+            onClick={() => setShowNoEligibilityDialog(false)} 
+            color="primary"
+          >
+            חזור
+          </Button>
         </DialogActions>
       </Dialog>
 
@@ -766,7 +784,7 @@ const TaxRefundForm = () => {
                   fontStyle: 'italic'
                 }}
               >
-                * השאלון נכתב בלשון זכר אך מתייחס לכל המינים
+                * השאלון נכתב בלשון זכר אך מתייחס לשני המינים
               </Typography>
             </div>
           </div>

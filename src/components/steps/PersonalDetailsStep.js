@@ -5,7 +5,9 @@ import {
   Button,
   Box,
   Grid,
-  Paper
+  Paper,
+  FormControlLabel,
+  Checkbox
 } from '@mui/material';
 import { Formik, Form } from 'formik';
 import * as Yup from 'yup';
@@ -21,7 +23,6 @@ const validationSchema = Yup.object().shape({
     .matches(/^\d{9}$/, 'מספר תעודת זהות חייב להכיל 9 ספרות')
     .test('valid-israeli-id', 'מספר תעודת זהות לא תקין', (value) => {
       if (!value) return false;
-      // Israeli ID validation algorithm
       const id = String(value).trim();
       if (id.length !== 9 || isNaN(id)) return false;
       
@@ -55,7 +56,8 @@ const validationSchema = Yup.object().shape({
     .required('שדה חובה'),
   email: Yup.string()
     .email('כתובת אימייל לא תקינה')
-    .required('שדה חובה')
+    .required('שדה חובה'),
+  pensionClearance: Yup.boolean()
 });
 
 const PersonalDetailsStep = ({ onSubmit, data = {}, setFormData, error }) => {
@@ -252,6 +254,28 @@ const PersonalDetailsStep = ({ onSubmit, data = {}, setFormData, error }) => {
           />
         </Grid>
       </Grid>
+
+      <FormControlLabel
+        control={
+          <Checkbox
+            checked={data?.personalDetails?.pensionClearance || false}
+            onChange={(e) => handleFieldChange('pensionClearance', e.target.checked)}
+          />
+        }
+        label="אני מאשר/ת הוצאת מסלקה פנסיונית עבורי לצורך בדיקת זכאות להחזר מס"
+        sx={{ 
+          marginTop: 2,
+          '& .MuiFormControlLabel-label': {
+            fontSize: '0.9rem'
+          }
+        }}
+      />
+
+      {error && (
+        <Typography variant="body2" color="error" sx={{ mt: 2 }}>
+          {error}
+        </Typography>
+      )}
     </Box>
   );
 };

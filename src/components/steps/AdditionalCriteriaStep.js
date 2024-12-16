@@ -13,8 +13,6 @@ import { motion } from 'framer-motion';
 const useStyles = makeStyles((theme) => ({
   formControl: {
     marginBottom: '20px',
-    width: '100%',
-    padding: '0 16px',
     '& .MuiFormLabel-root': {
       fontSize: '18px',
       color: '#333',
@@ -24,10 +22,13 @@ const useStyles = makeStyles((theme) => ({
   },
   checkboxGroup: {
     marginTop: '10px',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '12px',
-    width: '100%',
+    display: 'grid',
+    gridTemplateColumns: 'repeat(2, 1fr)',
+    gap: '22px',
+    '@media (max-width: 600px)': {
+      gridTemplateColumns: '1fr',
+      gap: '18px',
+    }
   },
   checkboxOption: {
     display: 'flex',
@@ -37,8 +38,6 @@ const useStyles = makeStyles((theme) => ({
     borderRadius: '8px',
     transition: 'all 0.2s ease',
     backgroundColor: '#fff',
-    width: 'calc(100% - 32px)',
-    margin: '0 auto',
     '&:hover': {
       backgroundColor: '#f5f7fa',
       borderColor: '#1a237e',
@@ -47,12 +46,13 @@ const useStyles = makeStyles((theme) => ({
   checkboxLabel: {
     display: 'flex',
     alignItems: 'center',
-    gap: '10px',
+    gap: '12px',
     width: '100%',
     margin: 0,
     '& .MuiFormControlLabel-label': {
-      fontSize: '17px',
+      fontSize: '16px',
       marginRight: '12px',
+      lineHeight: '1.4',
     },
     '& .MuiCheckbox-root': {
       color: '#1a237e',
@@ -69,6 +69,10 @@ const useStyles = makeStyles((theme) => ({
 
 const criteriaOptions = [
   {
+    value: 'pensionWithdrawal',
+    label: 'משכתי כספי פנסיה / פיצויים ושילמתי 35% מס'
+  },
+  {
     value: 'unemployment',
     label: 'קיבלתי אבטלה / כספים אחרים מביטוח לאומי'
   },
@@ -79,6 +83,14 @@ const criteriaOptions = [
   {
     value: 'securities',
     label: 'סחרתי בניירות ערך סחירים'
+  },
+  {
+    value: 'rentalIncome',
+    label: 'אני מקבל הכנסה משכר דירה'
+  },
+  {
+    value: 'over60',
+    label: 'אני בן 60 ומעלה'
   },
   {
     value: 'lifeInsurance',
@@ -99,14 +111,6 @@ const criteriaOptions = [
   {
     value: 'militaryService',
     label: 'השתחררתי מצה״ל / שירות לאומי ב-8 השנים האחרונות'
-  },
-  {
-    value: 'education',
-    label: 'סיימתי תואר / לימודי תעודה ב-7 השנים האחרונות'
-  },
-  {
-    value: 'rentalIncome',
-    label: 'אני מקבל הכנסה משכר דירה'
   },
   {
     value: 'newImmigrant',
@@ -161,7 +165,6 @@ const AdditionalCriteriaStep = ({ formData, handleChange, error }) => {
                     checked={formData.additionalCriteria?.includes(option.value) || false}
                     onChange={handleCheckboxChange}
                     value={option.value}
-                    name="additionalCriteria"
                   />
                 }
                 label={option.label}
@@ -170,7 +173,9 @@ const AdditionalCriteriaStep = ({ formData, handleChange, error }) => {
           ))}
         </div>
         {error && (
-          <FormHelperText error>{error}</FormHelperText>
+          <FormHelperText error>
+            {error}
+          </FormHelperText>
         )}
       </FormControl>
     </motion.div>
