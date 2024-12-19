@@ -472,7 +472,56 @@ const TaxRefundForm = () => {
       
       // Calculate score
       const scoreResult = calculateScore(formData);
+
+      // Format data for Zapier
+      const zapierData = {
+        firstName: formData.personalDetails?.firstName,
+        lastName: formData.personalDetails?.lastName,
+        phone: formData.personalDetails?.phone,
+        email: formData.personalDetails?.email,
+        idNumber: formData.personalDetails?.idNumber,
+        birthDate: formData.personalDetails?.birthDate,
+        address: formData.personalDetails?.address,
+        pensionClearance: formData.personalDetails?.pensionClearance ? 'כן' : 'לא',
+        maritalStatus: formData.maritalStatus === 'married' ? 'נשוי/אה' : 'רווק/ה',
+        employmentStatus: formData.employmentStatus === 'employed' ? 'שכיר' : 
+                        formData.employmentStatus === 'selfEmployed' ? 'עצמאי' : 
+                        formData.employmentStatus === 'bothEmployedAndSelfEmployed' ? 'שכיר + עצמאי' : 'לא עובד',
+        income: formData.income === 'above7000' ? 'מעל 7,000 ש"ח' : 'מתחת ל-7,000 ש"ח',
+        jobChanged: formData.jobHistory === 'changed' ? 'כן' : 'לא',
+        additionalCriteria: formData.additionalCriteria?.map(criteria => {
+          const criteriaLabels = {
+            unemployment: 'קבלת דמי אבטלה / כספים אחרים מביטוח לאומי',
+            propertyTax: 'מכרתי נכס ושילמתי מס שבח',
+            securities: 'סחרתי בניירות ערך סחירים',
+            lifeInsurance: 'ביטוח חיים פרטי / ביטוח משכנתא',
+            pensionDeposit: 'הפקדה באופן עצמאי לקופת גמל',
+            donations: 'תרומות למוסדות מוכרים',
+            disability: 'נכות מעל 90%',
+            militaryService: 'שחרור מצה"ל / שירות לאומי',
+            newImmigrant: 'עלייה חדשה',
+            pensionWithdrawal: 'משיכת כספי פנסיה / פיצויים ושילמתי 35% מס',
+            rentalIncome: 'אני מקבל הכנסה משכר דירה',
+            over60: 'אני בן 60 ומעלה',
+            jobChange: 'החלפתי מקום עבודה'
+          };
+          return criteriaLabels[criteria] || criteria;
+        }),
+        score: scoreResult.score,
+        leadQuality: scoreResult.quality,
+        scoreDetails: scoreResult.details
+      };
       
+      // Send data to Zapier webhook
+      const zapierResponse = await fetch('https://hooks.zapier.com/hooks/catch/1809069/2839xq9/', {
+        method: 'POST',
+        mode: 'no-cors',
+        body: JSON.stringify(zapierData)
+      });
+
+      // Since we're using no-cors, we won't get a proper response status
+      // Instead, we'll continue if the request doesn't throw an error
+
       const emailContent = `
       שם מלא: ${formData.personalDetails?.firstName} ${formData.personalDetails?.lastName}
       טלפון: ${formData.personalDetails?.phone}
