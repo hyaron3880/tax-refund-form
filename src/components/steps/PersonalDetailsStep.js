@@ -57,7 +57,8 @@ const validationSchema = Yup.object().shape({
   email: Yup.string()
     .email('כתובת אימייל לא תקינה')
     .required('שדה חובה'),
-  pensionClearance: Yup.boolean()
+  pensionClearance: Yup.boolean(),
+  marketingApproval: Yup.boolean()
 });
 
 const PersonalDetailsStep = ({ onSubmit, data = {}, setFormData, error }) => {
@@ -255,21 +256,54 @@ const PersonalDetailsStep = ({ onSubmit, data = {}, setFormData, error }) => {
         </Grid>
       </Grid>
 
-      <FormControlLabel
-        control={
-          <Checkbox
-            checked={data?.personalDetails?.pensionClearance || false}
-            onChange={(e) => handleFieldChange('pensionClearance', e.target.checked)}
-          />
-        }
-        label="אני מאשר/ת הוצאת מסלקה פנסיונית עבורי לצורך בדיקת זכאות להחזר מס"
-        sx={{ 
-          marginTop: 2,
-          '& .MuiFormControlLabel-label': {
-            fontSize: '0.9rem'
+      <Box sx={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        alignItems: 'center',
+        width: '100%',
+        gap: 1,
+        maxWidth: '600px',
+        margin: '0 auto'
+      }}>
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={data?.personalDetails?.pensionClearance || false}
+              onChange={(e) => handleFieldChange('pensionClearance', e.target.checked)}
+            />
           }
-        }}
-      />
+          label="אני מאשר/ת הוצאת מסלקה פנסיונית עבורי לצורך בדיקת זכאות להחזר מס"
+          sx={{ 
+            marginTop: 2,
+            width: '100%',
+            margin: '0 auto',
+            justifyContent: 'center',
+            '& .MuiFormControlLabel-label': {
+              fontSize: '0.9rem',
+              textAlign: 'center'
+            }
+          }}
+        />
+
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={data?.personalDetails?.marketingApproval || false}
+              onChange={(e) => handleFieldChange('marketingApproval', e.target.checked)}
+            />
+          }
+          label="מסכימ.ה שייאסף מידע אודותיי, שהחברה תחזור אלי באמצעות הודעות WhatsApp מייל, שיחה טלפונית, סמס וכן לאמור במדיניות הפרטיות ותנאי השימוש באתר"
+          sx={{ 
+            width: '100%',
+            margin: '0 auto',
+            justifyContent: 'center',
+            '& .MuiFormControlLabel-label': {
+              fontSize: '0.9rem',
+              textAlign: 'center'
+            }
+          }}
+        />
+      </Box>
 
       {error && (
         <Typography variant="body2" color="error" sx={{ mt: 2 }}>

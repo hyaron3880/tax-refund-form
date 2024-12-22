@@ -509,7 +509,8 @@ const TaxRefundForm = () => {
         }),
         score: scoreResult.score,
         leadQuality: scoreResult.quality,
-        scoreDetails: scoreResult.details
+        scoreDetails: scoreResult.details,
+        marketingApproval: formData.personalDetails?.marketingApproval ? 'כן' : 'לא'
       };
       
       // Send data to Zapier webhook
@@ -564,6 +565,7 @@ const TaxRefundForm = () => {
       פירוט הניקוד:
       ${scoreResult.details.join('\n  ')}
       
+      אישור שיווק: ${formData.personalDetails.marketingApproval ? 'כן' : 'לא'}
       `;
       
       const templateParams = {
